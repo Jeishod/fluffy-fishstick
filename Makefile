@@ -9,7 +9,7 @@ format:
 	@pflake8 app
 
 up:
-	@docker-compose up -d --build
+	@docker compose up -d --build
 
 migration:
 	@alembic upgrade head
