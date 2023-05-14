@@ -1,0 +1,47 @@
+version: "3.9"
+
+networks:
+  mb-network:
+    name: mb-network
+
+x-logging:
+  # LOGGING
+  &formatted-logging
+  driver: json-file
+  options:
+    tag: "{{.ImageName}}|{{.Name}}|{{.ImageFullID}}|{{.FullID}}"
+    max-size: "10m"
+    max-file: "3"
+    mode: "non-blocking"
+    max-buffer-size: "4m"
+
+x-kucoin-api-envs:
+  # KUCOIN
+  &kucoin-api-envs
+  KUCOIN_API_KEY: ${KUCOIN_API_KEY}
+  KUCOIN_API_SECRET: ${KUCOIN_API_SECRET}
+  KUCOIN_API_PASSPHRASE: ${KUCOIN_API_PASSPHRASE}
+
+services:
+  kucoin-api:
+    container_name: kucoin-api
+    build:
+      target: dev
+      context: .
+      dockerfile: Dockerfile
+    image: kucoin-api
+    restart: always
+    environment:
+      <<: *kucoin-api-envs
+    ports:
+      - "${KUCOIN_EXPOSED_PORT:-8000}:8000"
+    logging: *formatted-logging
+    volumes:
+      - ./app:/kucoin/app
+    networks:
+      - mb-network
+    healthcheck:
+      test: curl -f http://0.0.0.0:8000/api/v1/system/healthcheck
+      interval: 10s
+      timeout: 5s
+      retries: 10

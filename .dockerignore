@@ -1,0 +1,15 @@
+# Custom added files
+.git/
+.idea/
+.vscode/
+.DS_Store/
+.old/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Environments
+.env
+venv/

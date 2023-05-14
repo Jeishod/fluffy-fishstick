@@ -1,0 +1,31 @@
+[tool.poetry]
+name = "kucoin"
+version = "0.1.0"
+description = ""
+authors = ["jeishod <jeishod@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = {extras = ["python-dotenv"], version = "^0.95.1"}
+uvicorn = "^0.22.0"
+httpx = "^0.24.0"
+loguru = "^0.7.0"
+python-dotenv = "^1.0.0"
+
+[tool.flake8]
+max-line-length = 120
+max-complexity = 10
+
+[tool.isort]
+profile = "black"
+line_length = 120
+lines_after_imports = 2
+
+[tool.black]
+line-length = 120
+target-version = ['py311']
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
