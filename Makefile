@@ -22,3 +22,7 @@ down-migration:
 
 %:
 	@true
+
+up-db:
+	@docker compose up -d kucoin-redis
+	@docker compose up -d kucoin-postgres
