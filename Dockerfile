@@ -23,8 +23,8 @@ RUN pip install "poetry"
 COPY ./pyproject.toml ./poetry.lock  ${BASE_DIR}
 
 RUN poetry config virtualenvs.in-project true && \
-    poetry config virtualenvs.create true && \1
-    poetry install --no-interaction --no-ansi
+    poetry config virtualenvs.create true && \
+    poetry install --no-interaction --no-ansi --without dev
 
 ########################################################################################################################
 FROM compile-image as dev

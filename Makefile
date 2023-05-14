@@ -10,3 +10,15 @@ format:
 
 up:
 	@docker-compose up -d --build
+
+migration:
+	@alembic upgrade head
+
+create-migration:
+	@alembic revision --autogenerate -m "$(filter-out $@, $(MAKECMDGOALS))"
+
+down-migration:
+	@alembic downgrade -1
+
+%:
+	@true

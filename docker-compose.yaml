@@ -1,8 +1,14 @@
 version: "3.9"
 
 networks:
-  mb-network:
-    name: mb-network
+  kucoin-network:
+    name: kucoin-network
+
+volumes:
+  kucoin-postgres-volume:
+    name: kucoin-postgres-volume
+  kucoin-redis-volume:
+    name: kucoin-redis-volume
 
 x-logging:
   # LOGGING
@@ -16,11 +22,16 @@ x-logging:
     max-buffer-size: "4m"
 
 x-kucoin-api-envs:
-  # KUCOIN
   &kucoin-api-envs
   KUCOIN_API_KEY: ${KUCOIN_API_KEY}
   KUCOIN_API_SECRET: ${KUCOIN_API_SECRET}
   KUCOIN_API_PASSPHRASE: ${KUCOIN_API_PASSPHRASE}
+
+x-tg-bot-envs:
+  &tg-bot-envs
+  TELEGRAM_BOT_ENABLED: ${TELEGRAM_BOT_ENABLED}
+  TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+  TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
 
 services:
   kucoin-api:
@@ -32,16 +43,53 @@ services:
     image: kucoin-api
     restart: always
     environment:
-      <<: *kucoin-api-envs
+      <<: [*kucoin-api-envs, *tg-bot-envs]
     ports:
       - "${KUCOIN_EXPOSED_PORT:-8000}:8000"
     logging: *formatted-logging
     volumes:
       - ./app:/kucoin/app
     networks:
-      - mb-network
+      - kucoin-network
     healthcheck:
       test: curl -f http://0.0.0.0:8000/api/v1/system/healthcheck
       interval: 10s
       timeout: 5s
       retries: 10
+
+  kucoin-postgres:
+    container_name: kucoin-postgres
+    image: postgres:15.0-alpine
+    restart: always
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    healthcheck:
+      test: pg_isready --username=${POSTGRES_USER} --dbname=${POSTGRES_DB}
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "${POSTGRES_EXPOSED_PORT:-5432}:5432"
+    volumes:
+      - kucoin-postgres-volume:/var/lib/postgresql/data
+    networks:
+      - kucoin-network
+
+  kucoin-redis:
+    container_name: kucoin-redis
+    image: redis:7.0
+    restart: always
+    healthcheck:
+      test: redis-cli ping || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    ports:
+      - "${REDIS_EXPOSED_PORT:-6379}:6379"
+    volumes:
+      - kucoin-redis-volume:/data
+    logging: *formatted-logging
+    networks:
+      - kucoin-network

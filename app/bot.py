@@ -1,4 +1,5 @@
 from aiogram import Bot, Dispatcher
+from loguru import logger as LOGGER
 
 
 class TGBot:
@@ -13,3 +14,4 @@ class TGBot:
 
     async def send_notification(self, text: str):
         await self.bot.send_message(text=text, chat_id=self.admin_chat_id)
+        LOGGER.debug(f"[BOT] Notification sent: {text}")

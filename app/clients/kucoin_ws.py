@@ -1,70 +1,110 @@
-import ast
 import json
+from decimal import Decimal
 
-import httpx
 import websockets
 from loguru import logger as LOGGER
 from websockets.client import WebSocketClientProtocol
 
 from app.utils.enums import Symbols
+from app.utils.helpers import gen_request_id
+from app.utils.schemas import KucoinWSMessage, KucoinWSMessageData
 
 
 class WSClient:
     token: str
-    connection_id: str
     uri: str
     websocket: WebSocketClientProtocol | None
 
-    def __init__(self, connection_id: str = "asdasd"):
+    def __init__(self, token: str):
         self.ws_api_url = "wss://ws-api-spot.kucoin.com"
-        self.api_get_token_url = "https://api.kucoin.com/api/v1/bullet-public"
-        self.connection_id = connection_id
-        self.token = self.get_auth_token()
+        self.token = token
         self.uri = self.get_ws_uri()
         self.websocket = None
 
-    def get_auth_token(self) -> str:
-        response = httpx.post(url=self.api_get_token_url)
-        response_json = response.json()
-        token = response_json["data"]["token"]
-        self.token = token
-        return token
-
     def get_ws_uri(self) -> str:
-        uri = f"{self.ws_api_url}?token={self.token}&[connectId={self.connection_id}]"
+        connection_id = gen_request_id()
+        uri = f"{self.ws_api_url}?token={self.token}&[connectId={connection_id}]"
         return uri
 
-    def get_subscription_message(self, from_symbol: str, to_symbol: str) -> str:
+    async def connect(self) -> None:
+        self.websocket = await websockets.connect(uri=self.uri)
+
+    @staticmethod
+    def get_subscription_message(from_symbol: Symbols, to_symbol: Symbols, subscription: bool = True) -> str:
+        connection_id = gen_request_id()
+        request_type = "subscribe" if subscription else "unsubscribe"
         subscription_message = {
-            "id": self.connection_id,
-            "type": "subscribe",
+            "id": connection_id,
+            "type": request_type,
             "topic": f"/market/match:{from_symbol}-{to_symbol}",
             "privateChannel": False,
             "response": True,
         }
         return json.dumps(obj=subscription_message)
 
-    async def connect(self) -> None:
-        self.websocket = await websockets.connect(uri=self.uri)
-
     async def subscribe(self, from_symbol: Symbols = Symbols.GENS, to_symbol: Symbols = Symbols.USDT) -> None:
         if not self.websocket:
             await self.connect()
 
-        subscription_message = self.get_subscription_message(from_symbol=from_symbol, to_symbol=to_symbol)
-        LOGGER.debug(f"[WSClient] SUBSCRIPTION MESSAGE: {subscription_message}")
+        subscription_message = self.get_subscription_message(
+            from_symbol=from_symbol,
+            to_symbol=to_symbol,
+        )
         await self.websocket.send(message=subscription_message)
-        LOGGER.debug("[WSClient] SUBSCRIPTION COMPLETED")
+        LOGGER.debug(f"[WS CLIENT] SUBSCRIPTION COMPLETED FOR PAIR: {from_symbol}-{to_symbol}")
 
-    async def process_messages(self):
+    async def unsubscribe(self, from_symbol: Symbols = Symbols.GENS, to_symbol: Symbols = Symbols.USDT) -> None:
+        if not self.websocket:
+            await self.connect()
+
+        subscription_message = self.get_subscription_message(
+            from_symbol=from_symbol,
+            to_symbol=to_symbol,
+            subscription=False,
+        )
+        await self.websocket.send(message=subscription_message)
+        LOGGER.debug(f"[WS CLIENT] SUBSCRIPTION CANCELLED FOR PAIR: {from_symbol}-{to_symbol}")
+
+    async def start(self):
         try:
             if not self.websocket:
                 await self.connect()
 
             async for message in self.websocket:
-                dict_message = ast.literal_eval(message)
-                _message = json.dumps(dict_message, indent=2, ensure_ascii=False)
-                LOGGER.debug(f"[WSClient] Received message:\n{_message}")
+                await self.process_message(message=message)
 
         except KeyboardInterrupt:
             await self.websocket.close()
+
+    async def process_message(self, message: str | bytes) -> None:
+        parsed_message = KucoinWSMessage.parse_raw(message)
+        if parsed_message.type == "welcome":
+            LOGGER.debug(f"[WS CLIENT] Websocket accepted: {message}")
+            return
+        if parsed_message.type == "ack":
+            LOGGER.debug(f"[WS CLIENT] Server confirmed {message}")
+            return
+        if parsed_message.type == "message":
+            await self.process_data(data=parsed_message.data)
+
+    async def process_data(self, data: KucoinWSMessageData) -> None:
+        from_symbol, to_symbol = data.symbol.split("-")
+        summ = round(number=(data.price * data.size), ndigits=4)
+
+        min_value = 300
+        max_value = 1000
+
+        if min_value < summ < max_value:
+            # ADD LOGS WHILE DEBUG
+            log_message = self.make_log_string(
+                side=data.side, size=data.size, summ=summ, from_symbol=from_symbol, to_symbol=to_symbol
+            )
+            LOGGER.debug(log_message)
+
+    @staticmethod
+    def make_log_string(side: str, size: Decimal, summ: int, from_symbol: str, to_symbol: str) -> str:
+        operation = "BUY <<" if side == "buy" else ">> SELL"
+        operation_size = round(number=size, ndigits=4)
+        event_info = f"{operation_size: >16} {from_symbol}\tfor\t{summ: >12} {to_symbol}"
+        log_message = f"[WS CLIENT] {operation: ^7} {event_info}"
+        return log_message
