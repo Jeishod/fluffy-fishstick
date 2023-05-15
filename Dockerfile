@@ -1,9 +1,9 @@
 ########################################################################################################################
 FROM python:3.11-slim AS compile-image
 
-ARG BASE_DIR=/kucoin
-ARG USER=kucoin
-ARG GROUP=kucoin
+ARG BASE_DIR=/base
+ARG USER=base
+ARG GROUP=base
 
 RUN apt-get update
 RUN apt-get install -y --no-install-recommends build-essential gcc curl
@@ -27,11 +27,23 @@ RUN poetry config virtualenvs.in-project true && \
     poetry install --no-interaction --no-ansi --without dev
 
 ########################################################################################################################
-FROM compile-image as dev
+FROM python:3.11-slim as prod
 
-COPY --from=compile-image ${BASE_DIR}/.venv  ${BASE_DIR}/.venv
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends curl
+
+ARG BASE_DIR=/app
+
+WORKDIR ${BASE_DIR}
+
+COPY --from=compile-image /base/.venv  ${BASE_DIR}/.venv
 
 ENV PATH="${BASE_DIR}/.venv/bin:$PATH"
-USER ${USER}
 
-CMD ["python", "-m", "uvicorn", "--reload", "--use-colors", "--host", "0.0.0.0", "--port", "8000", "--log-level", "debug", "app.main:app"]
+COPY ./app ${BASE_DIR}/app
+
+COPY ./alembic.ini ./start.sh ${BASE_DIR}
+
+RUN chmod +x ${BASE_DIR}/start.sh
+
+CMD ["./start.sh"]

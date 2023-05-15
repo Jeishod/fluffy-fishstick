@@ -33,29 +33,44 @@ x-tg-bot-envs:
   TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
   TELEGRAM_ADMIN_CHAT_ID: ${TELEGRAM_ADMIN_CHAT_ID}
 
+x-postgres-envs:
+  &postgres-envs
+  POSTGRES_HOST: ${POSTGRES_HOST}
+  POSTGRES_PORT: ${POSTGRES_PORT}
+  POSTGRES_USER: ${POSTGRES_USER}
+  POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+  POSTGRES_DB: ${POSTGRES_DB}
+
+x-redis-envs:
+  &redis-envs
+  REDIS_HOST: ${REDIS_HOST}
+  REDIS_PORT: ${REDIS_PORT}
+  REDIS_DB: ${REDIS_DB}
+
 services:
   kucoin-api:
     container_name: kucoin-api
     build:
-      target: dev
+      target: prod
       context: .
       dockerfile: Dockerfile
     image: kucoin-api
     restart: always
     environment:
-      <<: [*kucoin-api-envs, *tg-bot-envs]
+      <<: [*kucoin-api-envs, *tg-bot-envs, *postgres-envs, *redis-envs]
     ports:
       - "${KUCOIN_EXPOSED_PORT:-8000}:8000"
-    logging: *formatted-logging
-    volumes:
-      - ./app:/kucoin/app
-    networks:
-      - kucoin-network
     healthcheck:
       test: curl -f http://0.0.0.0:8000/api/v1/system/healthcheck
       interval: 10s
       timeout: 5s
       retries: 10
+    logging: *formatted-logging
+    networks:
+      - kucoin-network
+    depends_on:
+      kucoin-postgres:
+        condition: service_healthy
 
   kucoin-postgres:
     container_name: kucoin-postgres
@@ -74,6 +89,7 @@ services:
       - "${POSTGRES_EXPOSED_PORT:-5432}:5432"
     volumes:
       - kucoin-postgres-volume:/var/lib/postgresql/data
+    logging: *formatted-logging
     networks:
       - kucoin-network
 

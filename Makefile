@@ -11,6 +11,13 @@ format:
 up:
 	@docker compose up -d --build
 
+down:
+	@docker compose down
+
+up-db:
+	@docker compose up -d kucoin-redis
+	@docker compose up -d kucoin-postgres
+
 migration:
 	@alembic upgrade head
 
@@ -22,7 +29,3 @@ down-migration:
 
 %:
 	@true
-
-up-db:
-	@docker compose up -d kucoin-redis
-	@docker compose up -d kucoin-postgres
