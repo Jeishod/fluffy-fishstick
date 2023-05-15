@@ -23,9 +23,9 @@ class KucoinTriggersManager:
         self,
         from_symbol: Symbols,
         to_symbol: Symbols,
-        min_value: float,
-        max_value: float,
-        trigger_count: int,
+        min_value_usdt: float,
+        max_value_usdt: float,
+        transactions_count: int,
         period_seconds: TriggerPeriods,
     ) -> KucoinTrigger | None:
         if await self.already_exists(from_symbol=from_symbol, to_symbol=to_symbol):
@@ -34,11 +34,10 @@ class KucoinTriggersManager:
         new_trigger = KucoinTrigger(
             from_symbol=from_symbol,
             to_symbol=to_symbol,
-            min_value=min_value,
-            max_value=max_value,
-            trigger_count=trigger_count,
+            min_value_usdt=min_value_usdt,
+            max_value_usdt=max_value_usdt,
+            transactions_count=transactions_count,
             period_seconds=period_seconds,
-            is_active=True,
             started_at=datetime.utcnow(),
         )
         async with self.db.session() as session:
@@ -54,7 +53,7 @@ class KucoinTriggersManager:
             return result.scalar()
 
     async def get_list(self) -> list[KucoinTrigger] | None:
-        query = select(KucoinTrigger).filter_by(is_active=True).order_by(KucoinTrigger.id)
+        query = select(KucoinTrigger).order_by(KucoinTrigger.id)
         async with self.db.session() as session:
             result = await session.execute(query)
             return result.scalars().all()

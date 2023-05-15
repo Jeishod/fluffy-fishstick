@@ -3,7 +3,7 @@ from pydantic import BaseSettings
 
 class Settings(BaseSettings):
     APP_DEBUG: bool = False
-    APP_TITLE: str = "Cool app"
+    APP_TITLE: str = "[KMD] Kucoin Mazafakers Detector"
     APP_DESCRIPTION: str = "Still the best."
     APP_SECRET_KEY: str = "wowthatissupersecretwow"
     APP_EXPIRE_TOKEN: int = 60 * 60 * 24 * 7 * 2  # two weeks in seconds

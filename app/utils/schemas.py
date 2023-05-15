@@ -46,22 +46,24 @@ class KucoinWSMessage(TimestampMixin):
 class AddTriggerRequestSchema(BaseModel):
     from_symbol: Symbols = Symbols.PEPE
     to_symbol: Symbols = Symbols.USDT
-    min_value: float = "0.0"
-    max_value: float = "100.0"
-    trigger_count: int = 10
+
+    min_value_usdt: float = "0.0"
+    max_value_usdt: float = "100.0"
+
+    transactions_count: int = 10
     period_seconds: TriggerPeriods = TriggerPeriods.SET_3_MINUTES
 
 
 class RetrieveTriggerResponseSchema(TimestampMixin):
     from_symbol: Symbols
     to_symbol: Symbols
-    min_value: float
-    max_value: float
-    trigger_count: int
+
+    min_value_usdt: float
+    max_value_usdt: float
+
+    transactions_count: int
     period_seconds: TriggerPeriods
-    is_active: bool
     started_at: datetime
-    cancelled_at: datetime | None
 
     class Config:
         orm_mode = True
