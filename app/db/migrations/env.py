@@ -8,8 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncEngine
 
 from app.configs import Settings
 from app.db.models import metadata
+from app.utils.logger import CustomLogger, LogLevel
 
 
+CustomLogger.make_logger(level=LogLevel.DEBUG)
 SETTINGS = Settings()
 config = context.config
 config.set_main_option("sqlalchemy.url", SETTINGS.POSTGRES_URL)
