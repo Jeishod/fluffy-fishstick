@@ -18,7 +18,7 @@ from app.utils.enums import (
 from app.utils.helpers import gen_hashed_string, gen_request_id, get_sign_string
 
 
-class KucoinClient:
+class APIClient:
     api_key: str
     api_secret: str
     api_passphrase: str

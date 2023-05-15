@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from fastapi import APIRouter, Depends, status
 
-from app.clients.kucoin_api import KucoinClient
+from app.clients.kucoin_api import APIClient
 from app.utils.dependencies import get_kucoin_client
 from app.utils.enums import CandleType, OrdersCount, Symbols
 
@@ -12,7 +12,7 @@ market_router = APIRouter(prefix="/market")
 
 @market_router.get("/list", status_code=status.HTTP_200_OK)
 async def get_markets(
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the transaction currency for the entire trading market.
@@ -23,7 +23,7 @@ async def get_markets(
 
 @market_router.get("/symbols", status_code=status.HTTP_200_OK)
 async def get_symbols(
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
     market: str | None = None,
 ):
     """
@@ -35,7 +35,7 @@ async def get_symbols(
 
 @market_router.get("/currencies", status_code=status.HTTP_200_OK)
 async def get_currencies(
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the currency list.
@@ -49,7 +49,7 @@ async def get_currencies(
 async def get_stats(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the statistics of the specified ticker in the last 24 hours.
@@ -60,7 +60,7 @@ async def get_stats(
 
 @market_router.get("/tickers", status_code=status.HTTP_200_OK)
 async def get_all_tickers(
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request market tickers for all the trading pairs in the market (including 24h volume).
@@ -76,7 +76,7 @@ async def get_all_tickers(
 async def get_ticker(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get Level 1 Market Data.
@@ -93,7 +93,7 @@ async def get_order_book_part(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
     count: OrdersCount = OrdersCount.GET_20,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get a list of open orders for a symbol.
@@ -109,7 +109,7 @@ async def get_order_book_part(
 async def get_order_book_full(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the order book of the specified symbol.
@@ -130,7 +130,7 @@ async def get_order_book_full(
 async def get_trade_histories(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the trade history of the specified symbol.
@@ -146,7 +146,7 @@ async def get_klines(
     from_symbol: Symbols = Symbols.GENS,
     to_symbol: Symbols = Symbols.USDT,
     candle_type: CandleType = CandleType.GET_3_MIN,
-    client: KucoinClient = Depends(get_kucoin_client),
+    client: APIClient = Depends(get_kucoin_client),
 ):
     """
     Request via this endpoint to get the kline of the specified symbol.

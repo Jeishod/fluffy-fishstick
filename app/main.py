@@ -8,7 +8,7 @@ from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.bot import TGBot
-from app.clients.kucoin_api import KucoinClient
+from app.clients.kucoin_api import APIClient
 from app.clients.kucoin_ws import WSClient
 from app.configs import Settings
 from app.db.crud_triggers import KucoinTriggersManager
@@ -22,7 +22,7 @@ from app.utils.logger import CustomLogger, LogLevel
 
 class Application(FastAPI):
     config: Settings
-    client: KucoinClient
+    api_client: APIClient
     ws_client: WSClient
     bot: TGBot | None
     cache: Redis | None
@@ -34,7 +34,7 @@ class Application(FastAPI):
         self.docs_url = "/"
 
         self.config = settings
-        self.client = KucoinClient(
+        self.api_client = APIClient(
             api_key=self.config.KUCOIN_API_KEY,
             api_secret=self.config.KUCOIN_API_SECRET,
             api_passphrase=self.config.KUCOIN_API_PASSPHRASE,
@@ -105,7 +105,7 @@ class Application(FastAPI):
         LOGGER.debug(f"[REDIS] GOT: {from_redis}")
 
     async def process_ws_messages(self):
-        ws_token = await self.client.get_ws_token()
+        ws_token = await self.api_client.get_ws_token()
         self.ws_client = WSClient(token=ws_token)
         asyncio.create_task(self.ws_client.start())
 
