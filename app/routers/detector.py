@@ -6,6 +6,7 @@ from app.utils.dependencies import get_db_triggers, get_ws_client
 from app.utils.enums import Symbols
 from app.utils.schemas import AddTriggerRequestSchema, RetrieveTriggerResponseSchema, TriggerExistsResponseSchema
 
+
 detector_router = APIRouter(prefix="/detector")
 
 
