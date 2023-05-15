@@ -23,9 +23,6 @@ class TriggerPeriods(IntEnum):
     SET_3_MINUTES = 180
     SET_5_MINUTES = 300
     SET_10_MINUTES = 600
-    SET_30_MINUTES = 1800
-    SET_1_HOUR = 3600
-    SET_3_HOURS = 10800
 
 
 class TradeType(StrEnum):
