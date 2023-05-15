@@ -5,7 +5,7 @@ from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
 
 
-def get_kucoin_client(request: Request) -> APIClient:
+def get_api_client(request: Request) -> APIClient:
     return request.app.api_client
 
 
