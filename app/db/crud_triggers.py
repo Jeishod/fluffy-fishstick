@@ -58,7 +58,7 @@ class KucoinTriggersManager:
             result = await session.execute(query)
             return result.scalars().all()
 
-    async def remove(self, from_symbol: Symbols, to_symbol: Symbols) -> KucoinTrigger:
+    async def remove(self, from_symbol: Symbols, to_symbol: Symbols) -> KucoinTrigger | None:
         db_trigger = await self.get(from_symbol=from_symbol, to_symbol=to_symbol)
         if db_trigger:
             async with self.db.session() as session:

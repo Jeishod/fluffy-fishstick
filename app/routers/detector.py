@@ -45,7 +45,7 @@ async def retrieve_single_trigger(
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
 ):
     """
-    Request via this endpoint to get list of active triggers.
+    Request via this endpoint to get single trigger info.
     """
     response = await db_triggers.get(from_symbol=from_symbol, to_symbol=to_symbol)
     if not response:
@@ -60,6 +60,7 @@ async def retrieve_single_trigger(
 async def add_trigger(
     data: AddTriggerRequestSchema,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
+    ws_client: WSClient = Depends(get_ws_client),
 ):
     """
     Request via this endpoint to add trigger for given symbols pair.
@@ -70,6 +71,7 @@ async def add_trigger(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail=f"Couldn't create a trigger for pair {data.from_symbol}-{data.to_symbol}",
         )
+    await ws_client.subscribe(from_symbol=data.from_symbol, to_symbol=data.to_symbol)
     return new_trigger
 
 
@@ -78,40 +80,16 @@ async def remove_trigger(
     from_symbol: Symbols = Symbols.PEPE,
     to_symbol: Symbols = Symbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
+    ws_client: WSClient = Depends(get_ws_client),
 ):
     """
     Request via this endpoint to remove trigger for given symbols pair.
     """
-    success = await db_triggers.remove(from_symbol=from_symbol, to_symbol=to_symbol)
-    if not success:
+    await ws_client.unsubscribe(from_symbol=from_symbol, to_symbol=to_symbol)
+    deleted_trigger = await db_triggers.remove(from_symbol=from_symbol, to_symbol=to_symbol)
+    if not deleted_trigger:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Trigger was not found for pair {from_symbol}-{to_symbol}",
         )
-    return {"status": "Trigger removed.", "symbols_pair": f"{from_symbol}-{to_symbol}"}
-
-
-@detector_router.post("/subscribe", status_code=status.HTTP_201_CREATED)
-async def add_subscription(
-    from_symbol: Symbols = Symbols.PEPE,
-    to_symbol: Symbols = Symbols.USDT,
-    ws_client: WSClient = Depends(get_ws_client),
-):
-    """
-    Request via this endpoint to add subscription on events with specific symbols pair.
-    """
-    await ws_client.subscribe(from_symbol=from_symbol, to_symbol=to_symbol)
-    return {"status": "Subscription added.", "symbols_pair": f"{from_symbol}-{to_symbol}"}
-
-
-@detector_router.post("/unsubscribe", status_code=status.HTTP_200_OK)
-async def cancel_subscription(
-    from_symbol: Symbols = Symbols.PEPE,
-    to_symbol: Symbols = Symbols.USDT,
-    ws_client: WSClient = Depends(get_ws_client),
-):
-    """
-    Request via this endpoint to add subscription on events with specific symbols pair.
-    """
-    await ws_client.unsubscribe(from_symbol=from_symbol, to_symbol=to_symbol)
-    return {"status": "Subscription cancelled", "symbols_pair": f"{from_symbol}-{to_symbol}"}
+    return deleted_trigger
