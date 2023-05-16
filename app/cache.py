@@ -27,15 +27,15 @@ class Cache:
             LOGGER.warning("[REDIS] Ping... Failed!")
             return False
 
-    async def add(self, name: str, obj):
+    async def add(self, name: str, obj) -> bool:
         json_obj = orjson.dumps(obj)
         await self.redis.set(name=name, value=json_obj)
         return True
 
-    async def get(self, name: str):
+    async def get(self, name: str) -> dict:
         json_obj = await self.redis.get(name=name)
         return orjson.loads(json_obj)
 
-    async def delete(self, name: str):
+    async def delete(self, name: str) -> bool:
         await self.redis.delete(name)
         return True

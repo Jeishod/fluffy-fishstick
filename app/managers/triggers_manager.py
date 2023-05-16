@@ -68,6 +68,7 @@ async def add_trigger(
         "price_usdt": price_usdt,
         "min_value_usdt": data.min_value_usdt,
         "max_value_usdt": data.max_value_usdt,
+        "transactions_max_count": data.transactions_max_count,
         "transactions_count": 0,
     }
     await cache.add(name=cached_trigger_key, obj=cached_trigger_data)

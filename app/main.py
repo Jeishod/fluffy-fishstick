@@ -107,7 +107,7 @@ class Application(FastAPI):
         # 3. add subscriptions for each trigger
 
         # TODO: start listening and process messages
-        asyncio.create_task(listen_websocket(ws_client=self.ws_client))
+        asyncio.create_task(listen_websocket(ws_client=self.ws_client, cache=self.cache, bot=self.bot))
 
     async def close_ws(self):
         await self.ws_client.stop()
