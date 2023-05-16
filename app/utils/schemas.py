@@ -10,7 +10,8 @@ from app.utils.enums import Symbols, TradeSide, TradeStatus, TradeType, TriggerP
 class TimestampMixin(BaseModel):
     class Config:
         json_encoders = {
-            datetime: lambda v: int(v.timestamp()),
+            # datetime: lambda v: int(v.timestamp()),
+            datetime: lambda v: v.strftime("%Y-%m-%d %H:%M:%S"),
         }
 
 
