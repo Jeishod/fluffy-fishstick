@@ -39,7 +39,7 @@ class Application(FastAPI):
             api_secret=self.config.KUCOIN_API_SECRET,
             api_passphrase=self.config.KUCOIN_API_PASSPHRASE,
         )
-        self.cache = redis.asyncio.from_url(url=self.config.REDIS_URL, decode_responses=True)
+        self.ws_client = WSClient()
         self.db = Database(url=self.config.POSTGRES_URL, echo=self.config.APP_DEBUG)
         self.bot = TGBot(token=self.config.TELEGRAM_BOT_TOKEN, admin_chat_id=self.config.TELEGRAM_ADMIN_CHAT_ID)
 

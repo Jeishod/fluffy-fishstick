@@ -1,9 +1,10 @@
 import json
 from decimal import Decimal
 
+import httpx
 import websockets
 from loguru import logger as LOGGER
-from websockets.client import WebSocketClientProtocol
+from websockets import WebSocketClientProtocol
 
 from app.utils.enums import Symbols
 from app.utils.helpers import gen_request_id
@@ -11,22 +12,33 @@ from app.utils.schemas import KucoinWSMessage, KucoinWSMessageData
 
 
 class WSClient:
-    token: str
-    uri: str
+    ws_api_url: str
+    ws_api_token_url: str
+    token: str | None
+    uri: str | None
     websocket: WebSocketClientProtocol | None
 
-    def __init__(self, token: str):
+    def __init__(self):
         self.ws_api_url = "wss://ws-api-spot.kucoin.com"
-        self.token = token
-        self.uri = self.get_ws_uri()
+        self.ws_api_token_url = "https://api.kucoin.com/api/v1/bullet-public"
+        self.token = None
+        self.uri = None
         self.websocket = None
 
-    def get_ws_uri(self) -> str:
+    def set_ws_token(self) -> None:
+        response = httpx.post(url=self.ws_api_token_url)
+        response_json = response.json()
+        self.token = response_json["data"]["token"]
+
+    def set_ws_uri(self) -> None:
+        if not self.token:
+            self.set_ws_token()
         connection_id = gen_request_id()
-        uri = f"{self.ws_api_url}?token={self.token}&[connectId={connection_id}]"
-        return uri
+        self.uri = f"{self.ws_api_url}?token={self.token}&[connectId={connection_id}]"
 
     async def connect(self) -> None:
+        if not self.uri:
+            self.set_ws_uri()
         self.websocket = await websockets.connect(uri=self.uri)
 
     @staticmethod
@@ -88,6 +100,14 @@ class WSClient:
             await self.process_data(data=parsed_message.data)
 
     async def process_data(self, data: KucoinWSMessageData) -> None:
+        """
+        # TODO: update
+        1. get symbols
+        2. get cached_trigger from cache
+        2. get transaction_value in USDT from cached_trigger for from_symbol
+        3. compare transaction_value with trigger min_val and max_val
+        4. add +1 to transactions_max_count
+        """
         from_symbol, to_symbol = data.symbol.split("-")
         summ = round(number=(data.price * data.size), ndigits=4)
 
