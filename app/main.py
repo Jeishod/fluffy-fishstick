@@ -17,6 +17,7 @@ from app.routers.detector import detector_router
 from app.routers.market import market_router
 from app.routers.system import system_router
 from app.utils.logger import CustomLogger, LogLevel
+from app.utils.tasks import listen_websocket
 
 
 class Application(FastAPI):
@@ -54,6 +55,7 @@ class Application(FastAPI):
         self.add_event_handler("startup", self.ping_db)
         self.add_event_handler("startup", self.ping_cache)
         self.add_event_handler("startup", self.ping_bot)
+        self.add_event_handler("startup", self.start_ws)
         self.add_event_handler("startup", self.process_ws_messages)
 
         self.add_event_handler("shutdown", self.close_ws)
@@ -90,6 +92,9 @@ class Application(FastAPI):
         await self.bot.send_notification(text="WOAAA, HELLO DUDE!!1")
         LOGGER.debug("[BOT] Ping... Success!")
 
+    async def start_ws(self) -> None:
+        await self.ws_client.start()
+
     async def process_ws_messages(self):
         # TODO: add price listener for triggers, run this every 3 minutes
         # 1. get all triggers from db
@@ -102,7 +107,7 @@ class Application(FastAPI):
         # 3. add subscriptions for each trigger
 
         # TODO: start listening and process messages
-        asyncio.create_task(self.ws_client.start())
+        asyncio.create_task(listen_websocket(ws_client=self.ws_client))
 
     async def close_ws(self):
         await self.ws_client.stop()
