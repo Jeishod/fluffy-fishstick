@@ -111,7 +111,7 @@ async def remove_all_triggers(
             to_symbol=trigger.to_symbol,
             db_triggers=db_triggers,
             ws_client=ws_client,
-            cache=cache
+            cache=cache,
         )
         removed_triggers.append(removed_trigger)
     return removed_triggers
