@@ -70,12 +70,9 @@ class Application(FastAPI):
         )
 
     async def ping_db(self) -> None:
-        LOGGER.debug("[DB] Ping...")
         if not await self.db.ping():
-            LOGGER.warning("[DB] Ping... Failed!")
             self.db = None
             return
-        LOGGER.debug("[DB] Ping... Success!")
         self.db_triggers = KucoinTriggersManager(db=self.db)
 
     async def ping_bot(self) -> None:

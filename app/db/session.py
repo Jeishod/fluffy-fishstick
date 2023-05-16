@@ -54,9 +54,9 @@ class Database:
     async def ping(self) -> bool:
         try:
             async with self.session() as session:
-                LOGGER.debug("[DB] Testing database connection...")
+                LOGGER.debug("[DB] Ping...")
                 await session.execute(text("SELECT 1"))
-                LOGGER.debug("[DB] Testing database connection... Success!")
+                LOGGER.debug("[DB] Ping... Success!")
                 return True
 
         except Exception as e:
