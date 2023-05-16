@@ -21,6 +21,6 @@ class KucoinTrigger(Base):
     min_value_usdt: float = Column(Float)
     max_value_usdt: float = Column(Float)
 
-    transactions_count: int = Column(Integer)
+    transactions_max_count: int = Column(Integer)
     period_seconds: TriggerPeriods = Column(Integer)
     started_at: datetime = Column(DateTime(timezone=False), default=datetime.utcnow)

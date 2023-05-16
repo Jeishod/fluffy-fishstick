@@ -50,7 +50,7 @@ class AddTriggerRequestSchema(BaseModel):
     min_value_usdt: float = "0.0"
     max_value_usdt: float = "100.0"
 
-    transactions_count: int = 10
+    transactions_max_count: int = 10
     period_seconds: TriggerPeriods = TriggerPeriods.SET_3_MINUTES
 
 
@@ -61,9 +61,12 @@ class RetrieveTriggerResponseSchema(TimestampMixin):
     min_value_usdt: float
     max_value_usdt: float
 
-    transactions_count: int
+    transactions_max_count: int
     period_seconds: TriggerPeriods
     started_at: datetime
+
+    transactions_count: int | None
+    price_usdt: float | None
 
     class Config:
         orm_mode = True

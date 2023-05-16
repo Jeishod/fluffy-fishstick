@@ -25,7 +25,7 @@ class KucoinTriggersManager:
         to_symbol: Symbols,
         min_value_usdt: float,
         max_value_usdt: float,
-        transactions_count: int,
+        transactions_max_count: int,
         period_seconds: TriggerPeriods,
     ) -> KucoinTrigger | None:
         if await self.already_exists(from_symbol=from_symbol, to_symbol=to_symbol):
@@ -36,7 +36,7 @@ class KucoinTriggersManager:
             to_symbol=to_symbol,
             min_value_usdt=min_value_usdt,
             max_value_usdt=max_value_usdt,
-            transactions_count=transactions_count,
+            transactions_max_count=transactions_max_count,
             period_seconds=period_seconds,
             started_at=datetime.utcnow(),
         )
