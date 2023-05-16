@@ -85,8 +85,14 @@ class WSClient:
             async for message in self.websocket:
                 await self.process_message(message=message)
 
-        except KeyboardInterrupt:
-            await self.websocket.close()
+        except (KeyboardInterrupt, Exception):
+            await self.stop()
+
+    async def stop(self):
+        if not self.websocket:
+            return
+        LOGGER.warning("[WS CLIENT] Closing...")
+        await self.websocket.close()
 
     async def process_message(self, message: str | bytes) -> None:
         parsed_message = KucoinWSMessage.parse_raw(message)
@@ -102,6 +108,7 @@ class WSClient:
     async def process_data(self, data: KucoinWSMessageData) -> None:
         """
         # TODO: update
+        0. use `cache` instance
         1. get symbols
         2. get cached_trigger from cache
         2. get transaction_value in USDT from cached_trigger for from_symbol

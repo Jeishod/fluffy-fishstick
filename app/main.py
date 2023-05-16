@@ -56,6 +56,8 @@ class Application(FastAPI):
         self.add_event_handler("startup", self.ping_bot)
         self.add_event_handler("startup", self.process_ws_messages)
 
+        self.add_event_handler("shutdown", self.close_ws)
+
         self.add_middleware(
             middleware_class=SessionMiddleware,
             secret_key=self.config.APP_SECRET_KEY,
@@ -101,6 +103,9 @@ class Application(FastAPI):
 
         # TODO: start listening and process messages
         asyncio.create_task(self.ws_client.start())
+
+    async def close_ws(self):
+        await self.ws_client.stop()
 
     def mount_routers(self) -> None:
         self.include_router(router=detector_router, prefix="/api/v1", tags=["Detector"])
