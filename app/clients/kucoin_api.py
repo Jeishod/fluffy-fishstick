@@ -1,4 +1,5 @@
 import datetime
+import decimal
 import json
 
 from fastapi import HTTPException, status
@@ -188,6 +189,13 @@ class APIClient:
             v2=True,
         )
         return response
+
+    async def get_price_in_usdt(self, from_symbol: Symbols) -> decimal.Decimal:
+        ticker = await self.get_ticker(from_symbol=from_symbol, to_symbol=Symbols.USDT)
+        ticker_json = ticker.json()
+        price = decimal.Decimal(ticker_json["data"]["price"])
+        LOGGER.debug(f"PRICE FOR TICKER: {from_symbol}: {price}")
+        return price
 
     async def get_order_book(self, from_symbol: Symbols, to_symbol: Symbols, count: OrdersCount):
         request_id = gen_request_id()
