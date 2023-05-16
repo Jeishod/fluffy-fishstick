@@ -20,6 +20,7 @@ python-dateutil = "^2.8.2"
 aiogram = {version = "^3.0.0b7", allow-prereleases = true}
 redis = "^4.5.5"
 itsdangerous = "^2.1.2"
+orjson = "^3.8.12"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

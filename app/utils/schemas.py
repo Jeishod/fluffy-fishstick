@@ -1,6 +1,7 @@
 import decimal
 from datetime import datetime
 
+import orjson
 from pydantic import BaseModel
 
 from app.utils.enums import Symbols, TradeSide, TradeStatus, TradeType, TriggerPeriods
@@ -34,6 +35,10 @@ class KucoinWSMessageData(TimestampMixin):
     time: datetime  # "1683997968318000000"
     tradeId: int  # "1199198515234817"
     type: str  # "match"
+
+    class Config:
+        json_loads = orjson.loads
+        json_dumps = orjson.dumps
 
 
 class KucoinWSMessage(TimestampMixin):

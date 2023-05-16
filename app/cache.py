@@ -1,6 +1,6 @@
-import pickle
 from datetime import datetime
 
+import orjson
 from loguru import logger as LOGGER
 from redis.asyncio import Redis, from_url
 from redis.exceptions import ConnectionError
@@ -28,13 +28,13 @@ class Cache:
             return False
 
     async def add(self, name: str, obj):
-        pickled_obj = pickle.dumps(obj)
-        await self.redis.set(name=name, value=pickled_obj)
+        json_obj = orjson.dumps(obj)
+        await self.redis.set(name=name, value=json_obj)
         return True
 
     async def get(self, name: str):
-        pickled_obj = await self.redis.get(name=name)
-        return pickle.loads(pickled_obj)
+        json_obj = await self.redis.get(name=name)
+        return orjson.loads(json_obj)
 
     async def delete(self, name: str):
         await self.redis.delete(name)
