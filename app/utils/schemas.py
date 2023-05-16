@@ -54,7 +54,7 @@ class AddTriggerRequestSchema(BaseModel):
     period_seconds: TriggerPeriods = TriggerPeriods.SET_3_MINUTES
 
 
-class RetrieveTriggerResponseSchema(TimestampMixin):
+class GetSingleTriggerSchema(TimestampMixin):
     from_symbol: Symbols
     to_symbol: Symbols
 
