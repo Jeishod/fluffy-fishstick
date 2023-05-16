@@ -1,13 +1,12 @@
 import asyncio
 
-import redis
 from fastapi import FastAPI
 from loguru import logger as LOGGER
-from redis.asyncio import Redis
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
 from app.bot import TGBot
+from app.cache import Cache
 from app.clients.kucoin_api import APIClient
 from app.clients.kucoin_ws import WSClient
 from app.configs import Settings
@@ -25,7 +24,7 @@ class Application(FastAPI):
     api_client: APIClient
     ws_client: WSClient
     bot: TGBot | None
-    cache: Redis | None
+    cache: Cache | None
     db: Database | None
     db_triggers: KucoinTriggersManager | None
 
@@ -41,6 +40,7 @@ class Application(FastAPI):
         )
         self.ws_client = WSClient()
         self.db = Database(url=self.config.POSTGRES_URL, echo=self.config.APP_DEBUG)
+        self.cache = Cache(url=self.config.REDIS_URL, decode_responses=False)
         self.bot = TGBot(token=self.config.TELEGRAM_BOT_TOKEN, admin_chat_id=self.config.TELEGRAM_ADMIN_CHAT_ID)
 
         self.db_triggers = None
@@ -75,6 +75,11 @@ class Application(FastAPI):
             return
         self.db_triggers = KucoinTriggersManager(db=self.db)
 
+    async def ping_cache(self) -> None:
+        if not await self.cache.ping():
+            self.cache = None
+            return
+
     async def ping_bot(self) -> None:
         if not self.config.TELEGRAM_BOT_ENABLED:
             self.bot = None
@@ -83,27 +88,18 @@ class Application(FastAPI):
         await self.bot.send_notification(text="WOAAA, HELLO DUDE!!1")
         LOGGER.debug("[BOT] Ping... Success!")
 
-    async def ping_cache(self) -> None:
-        try:
-            LOGGER.debug("[REDIS] Ping...")
-            await self.cache.ping()
-            LOGGER.debug("[REDIS] Ping... Success!")
-        except redis.exceptions.ConnectionError:
-            LOGGER.warning("[REDIS] Ping... Failed!")
-            self.cache = None
-            return
-        object_dict = {
-            "first_val": "12",
-            "second_val": "32",
-            "third_val": 1233322,
-        }
-        await self.cache.hset(name="TRIGGERS", mapping=object_dict)
-        from_redis = await self.cache.hgetall(name="TRIGGERS")
-        LOGGER.debug(f"[REDIS] GOT: {from_redis}")
-
     async def process_ws_messages(self):
-        ws_token = await self.api_client.get_ws_token()
-        self.ws_client = WSClient(token=ws_token)
+        # TODO: add price listener for triggers, run this every 3 minutes
+        # 1. get all triggers from db
+        # 2. get price in USDT
+        # 3. add trigger \ update price for trigger to cache
+
+        # TODO: restart subscriptions for triggers in database
+        # 1. get triggers from db
+        # 2. add triggers to cache if cache is empty
+        # 3. add subscriptions for each trigger
+
+        # TODO: start listening and process messages
         asyncio.create_task(self.ws_client.start())
 
     def mount_routers(self) -> None:

@@ -1,8 +1,11 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from loguru import logger as LOGGER
 
+from app.cache import Cache
+from app.clients.kucoin_api import APIClient
 from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
-from app.utils.dependencies import get_db_triggers, get_ws_client
+from app.utils.dependencies import get_api_client, get_cache, get_db_triggers, get_ws_client
 from app.utils.enums import Symbols
 from app.utils.schemas import AddTriggerRequestSchema, RetrieveTriggerResponseSchema, TriggerExistsResponseSchema
 
@@ -43,6 +46,7 @@ async def retrieve_single_trigger(
     from_symbol: Symbols = Symbols.PEPE,
     to_symbol: Symbols = Symbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
+    cache: Cache = Depends(get_cache),
 ):
     """
     Request via this endpoint to get single trigger info.
@@ -53,6 +57,13 @@ async def retrieve_single_trigger(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Trigger was not found for pair {from_symbol}-{to_symbol}",
         )
+
+    # get cached trigger
+    cached_trigger_key = f"{from_symbol}-{to_symbol}"
+    cached_trigger = await cache.get(name=cached_trigger_key)
+    LOGGER.warning(f"CACHED TRIGGER: {cached_trigger}")
+    response.price_usdt = cached_trigger["price_usdt"]
+    response.transactions_max_count = cached_trigger["transactions_count"]
     return response
 
 
@@ -61,6 +72,8 @@ async def add_trigger(
     data: AddTriggerRequestSchema,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
     ws_client: WSClient = Depends(get_ws_client),
+    api_client: APIClient = Depends(get_api_client),
+    cache: Cache = Depends(get_cache),
 ):
     """
     Request via this endpoint to add trigger for given symbols pair.
@@ -71,6 +84,20 @@ async def add_trigger(
             status_code=status.HTTP_406_NOT_ACCEPTABLE,
             detail=f"Couldn't create a trigger for pair {data.from_symbol}-{data.to_symbol}",
         )
+    # get current ticker for 'from_symbol' in USDT
+    price_usdt = await api_client.get_price_in_usdt(from_symbol=data.from_symbol)
+
+    # add trigger with price to cache
+    cached_trigger_key = f"{data.from_symbol}-{data.to_symbol}"
+    cached_trigger_data = {
+        "price_usdt": price_usdt,
+        "min_value_usdt": data.min_value_usdt,
+        "max_value_usdt": data.max_value_usdt,
+        "transactions_count": 0,
+    }
+    await cache.add(name=cached_trigger_key, obj=cached_trigger_data)
+    new_trigger.price_usdt = price_usdt
+
     await ws_client.subscribe(from_symbol=data.from_symbol, to_symbol=data.to_symbol)
     return new_trigger
 
@@ -81,6 +108,7 @@ async def remove_trigger(
     to_symbol: Symbols = Symbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
     ws_client: WSClient = Depends(get_ws_client),
+    cache: Cache = Depends(get_cache),
 ):
     """
     Request via this endpoint to remove trigger for given symbols pair.
@@ -92,4 +120,8 @@ async def remove_trigger(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Trigger was not found for pair {from_symbol}-{to_symbol}",
         )
+    cached_trigger_key = f"{from_symbol}-{to_symbol}"
+
+    # remove trigger from cache
+    await cache.delete(cached_trigger_key)
     return deleted_trigger
