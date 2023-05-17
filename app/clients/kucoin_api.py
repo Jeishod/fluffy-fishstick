@@ -193,7 +193,6 @@ class APIClient:
         ticker = await self.get_ticker(from_symbol=from_symbol, to_symbol=Symbols.USDT)
         ticker_json = ticker.json()
         price = ticker_json["data"]["price"]
-        LOGGER.debug(f"PRICE FOR TICKER: {from_symbol}: {price}")
         return price
 
     async def get_order_book(self, from_symbol: Symbols, to_symbol: Symbols, count: OrdersCount):
@@ -266,7 +265,6 @@ class APIClient:
             "startAt": start_ts,
             "endAt": end_ts,
         }
-        LOGGER.debug(f"PARAMS: {params}")
         response = await self.send_request(
             method=RequestMethod.GET,
             endpoint=endpoint,
