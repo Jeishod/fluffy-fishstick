@@ -17,7 +17,7 @@ from app.routers.detector import detector_router
 from app.routers.market import market_router
 from app.routers.system import system_router
 from app.utils.logger import CustomLogger, LogLevel
-from app.utils.tasks import listen_websocket
+from app.utils.tasks import listen_websocket, update_prices
 
 
 class Application(FastAPI):
@@ -97,9 +97,7 @@ class Application(FastAPI):
 
     async def process_ws_messages(self):
         # TODO: add price listener for triggers, run this every 3 minutes
-        # 1. get all triggers from db
-        # 2. get price in USDT
-        # 3. add trigger \ update price for trigger to cache
+        asyncio.create_task(update_prices(api_client=self.api_client, cache=self.cache, db_triggers=self.db_triggers))
 
         # TODO: restart subscriptions for triggers in database
         # 1. get triggers from db

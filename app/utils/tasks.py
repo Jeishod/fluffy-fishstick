@@ -8,13 +8,28 @@ from app.bot import TGBot
 from app.cache import Cache
 from app.clients.kucoin_api import APIClient
 from app.clients.kucoin_ws import WSClient
+from app.db.crud_triggers import KucoinTriggersManager
 from app.utils.schemas import KucoinWSMessage, KucoinWSMessageData
 
 
-async def update_prices(cache: Cache, api_client: APIClient) -> None:
+async def update_prices(
+    cache: Cache,
+    api_client: APIClient,
+    db_triggers: KucoinTriggersManager,
+    update_period_sec: int = 60,
+) -> None:
     while True:
         try:
-            await asyncio.sleep(300)
+            triggers = await db_triggers.get_list()
+            for trigger in triggers:
+                name = f"{trigger.from_symbol}-{trigger.to_symbol}"
+                trigger_price = await api_client.get_price_in_usdt(from_symbol=trigger.from_symbol)
+                cached_trigger = await cache.get(name=name)
+                if cached_trigger["price_usdt"] != trigger_price:
+                    cached_trigger["price_usdt"] = trigger_price
+                await cache.add(name=name, obj=cached_trigger)
+                LOGGER.debug(f"[TASK] Price updated for {trigger.from_symbol}: {trigger_price}")
+            await asyncio.sleep(update_period_sec)
         except Exception as e:
             LOGGER.error(f"Exception during updating tickers prices: {e}")
             break
@@ -61,9 +76,11 @@ async def process_data(cache: Cache, data: KucoinWSMessageData, bot: TGBot) -> N
         new_count = transactions_count + 1
         cached_trigger["transactions_count"] = new_count
         if new_count == transactions_max_count:
-            await bot.send_notification(
-                text=f"<b>❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️ACHTUNG❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️</b>\n🤬🤬🤬MAZAFAKERS ACTIVE!!11\n{data.symbol}: already {new_count} transactions"
+            text = (
+                f"<b>❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️ACHTUNG❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️</b>\n🤬🤬🤬MAZAFAKERS ACTIVE!!11\n"
+                f"{data.symbol}: already {new_count} transactions"
             )
+            await bot.send_notification(text=text)
         await cache.add(name=data.symbol, obj=cached_trigger)
 
         # TODO: remove logs after debug
