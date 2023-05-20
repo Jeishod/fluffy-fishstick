@@ -39,7 +39,9 @@ async def get_trigger(
     cached_trigger = await cache.get(name=cached_trigger_key)
     LOGGER.warning(f"CACHED TRIGGER: {cached_trigger}")
     response.price_usdt = cached_trigger["price_usdt"]
-    response.transactions_max_count = cached_trigger["transactions_count"]
+    cached_transactions_count = await cache.get_count(name=f"EVENTS-{cached_trigger_key}")
+    response.transactions_max_count = cached_trigger["transactions_max_count"]
+    response.transactions_count = cached_transactions_count
     return response
 
 
@@ -69,7 +71,7 @@ async def add_trigger(
         "min_value_usdt": data.min_value_usdt,
         "max_value_usdt": data.max_value_usdt,
         "transactions_max_count": data.transactions_max_count,
-        "transactions_count": 0,
+        "period_seconds": data.period_seconds,
     }
     await cache.add(name=cached_trigger_key, obj=cached_trigger_data)
     new_trigger.price_usdt = price_usdt

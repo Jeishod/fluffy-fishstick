@@ -52,38 +52,25 @@ async def process_message(cache: Cache, message: str | bytes, bot: TGBot) -> Non
         await process_data(cache=cache, data=parsed_message.data, bot=bot)
 
 
-async def process_data(cache: Cache, data: KucoinWSMessageData, bot: TGBot) -> None:
-    """
-    # TODO: update
-    0. use `cache` instance
-    1. get symbols
-    2. get cached_trigger from cache
-    2. get transaction_value in USDT from cached_trigger for from_symbol
-    3. compare transaction_value with trigger min_val and max_val
-    4. add +1 to transactions_max_count
-    """
-    from_symbol, to_symbol = data.symbol.split("-")
+async def check_if_triggering(cache: Cache, data: KucoinWSMessageData) -> tuple[bool, dict]:
+    # TODO: add WS Server
 
+    # 1. get cached trigger
     cached_trigger = await cache.get(data.symbol)
-    summ_usdt = decimal.Decimal(cached_trigger["price_usdt"]) * data.size
 
     min_value_usdt = cached_trigger.get("min_value_usdt")
     max_value_usdt = cached_trigger.get("max_value_usdt")
-    transactions_count = cached_trigger["transactions_count"]
-    transactions_max_count = cached_trigger.get("transactions_max_count")
+    cached_price = cached_trigger.get("price_usdt")
 
-    if min_value_usdt < summ_usdt < max_value_usdt:
-        new_count = transactions_count + 1
-        cached_trigger["transactions_count"] = new_count
-        if new_count == transactions_max_count:
-            text = (
-                f"<b>❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️ACHTUNG❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️</b>\n🤬🤬🤬MAZAFAKERS ACTIVE!!11\n"
-                f"{data.symbol}: already {new_count} transactions"
-            )
-            await bot.send_notification(text=text)
-        await cache.add(name=data.symbol, obj=cached_trigger)
+    # 2. get current transaction summ in USDT
+    summ_usdt = decimal.Decimal(cached_price) * data.size
 
+    # 3. compare current summ with cached trigger min\max
+    is_triggering = min_value_usdt < summ_usdt < max_value_usdt
+
+    if is_triggering:
         # TODO: remove logs after debug
+        from_symbol, to_symbol = data.symbol.split("-")
         log_message = make_log_string(
             side=data.side,
             size=data.size,
@@ -92,6 +79,36 @@ async def process_data(cache: Cache, data: KucoinWSMessageData, bot: TGBot) -> N
             to_symbol=to_symbol,
         )
         LOGGER.debug(log_message)
+        # TODO: 4. send message to websocket thru websocket server
+
+    return is_triggering, cached_trigger
+
+
+async def process_data(cache: Cache, data: KucoinWSMessageData, bot: TGBot) -> None:
+    # 1. check if transaction is triggering
+    is_triggering, cached_trigger = await check_if_triggering(cache=cache, data=data)
+    if not is_triggering:
+        return
+
+    transactions_max_count = cached_trigger.get("transactions_max_count")
+    period_seconds = cached_trigger.get("period_seconds")
+
+    # 2. add record for to cached events table
+    cached_events_table = f"EVENTS-{data.symbol}"
+    await cache.add_for_now(name=cached_events_table)
+
+    # 3. get count of cached events
+    transactions_count = await cache.get_count_for_period(name=cached_events_table, period_seconds=period_seconds)
+    if transactions_count == transactions_max_count:
+
+        # 4. send telegram notification
+        text = (
+            f"<b>❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️ACHTUNG❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️</b>\n"  # noqa
+            f"🤬🤬🤬MAZAFAKERS ACTIVE!!11\n"
+            f"{data.symbol}: already {transactions_count} transactions"
+        )
+        await bot.send_notification(text=text)
+    return
 
 
 def make_log_string(side: str, size: Decimal, summ: Decimal, from_symbol: str, to_symbol: str) -> str:
