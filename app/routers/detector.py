@@ -7,13 +7,18 @@ from app.db.crud_triggers import KucoinTriggersManager
 from app.managers import triggers_manager
 from app.utils.dependencies import get_api_client, get_cache, get_db_triggers, get_ws_client
 from app.utils.enums import Symbols
-from app.utils.schemas import AddTriggerRequestSchema, GetSingleTriggerSchema, TriggerExistsResponseSchema
+from app.utils.schemas import (
+    AddTriggerRequestSchema,
+    GetSingleTriggerSchema,
+    SingleTriggerSchema,
+    TriggerExistsResponseSchema,
+)
 
 
 detector_router = APIRouter(prefix="/detector")
 
 
-@detector_router.get("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[GetSingleTriggerSchema])
+@detector_router.get("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[SingleTriggerSchema])
 async def get_all_triggers(
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
 ):
@@ -62,7 +67,7 @@ async def get_trigger(
     return response
 
 
-@detector_router.post("/triggers", status_code=status.HTTP_201_CREATED, response_model=GetSingleTriggerSchema)
+@detector_router.post("/triggers", status_code=status.HTTP_201_CREATED, response_model=SingleTriggerSchema)
 async def add_trigger(
     data: AddTriggerRequestSchema,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
@@ -83,7 +88,7 @@ async def add_trigger(
     return response
 
 
-@detector_router.delete("/triggers", status_code=status.HTTP_200_OK, response_model=GetSingleTriggerSchema)
+@detector_router.delete("/triggers", status_code=status.HTTP_200_OK, response_model=SingleTriggerSchema)
 async def remove_trigger(
     from_symbol: Symbols = Symbols.PEPE,
     to_symbol: Symbols = Symbols.USDT,
@@ -104,7 +109,7 @@ async def remove_trigger(
     return response
 
 
-@detector_router.delete("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[GetSingleTriggerSchema])
+@detector_router.delete("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[SingleTriggerSchema])
 async def remove_all_triggers(
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
     ws_client: WSClient = Depends(get_ws_client),

@@ -38,9 +38,8 @@ async def get_trigger(
     cached_trigger_key = f"{from_symbol}-{to_symbol}"
     cached_trigger = await cache.get(name=cached_trigger_key)
     LOGGER.warning(f"CACHED TRIGGER: {cached_trigger}")
-    response.price_usdt = cached_trigger["price_usdt"]
+    response.price_usdt = cached_trigger["price_usdt"] if cached_trigger else None
     cached_transactions_count = await cache.get_count(name=f"EVENTS-{cached_trigger_key}")
-    response.transactions_max_count = cached_trigger["transactions_max_count"]
     response.transactions_count = cached_transactions_count
     return response
 
@@ -98,6 +97,7 @@ async def remove_trigger(
 
     # remove trigger from cache
     await cache.delete(cached_trigger_key)
+    await cache.delete(f"EVENTS-{cached_trigger_key}")
     return deleted_trigger
 
 

@@ -25,8 +25,12 @@ async def update_prices(
                 name = f"{trigger.from_symbol}-{trigger.to_symbol}"
                 trigger_price = await api_client.get_price_in_usdt(from_symbol=trigger.from_symbol)
                 cached_trigger = await cache.get(name=name)
-                if cached_trigger["price_usdt"] != trigger_price:
-                    cached_trigger["price_usdt"] = trigger_price
+                if cached_trigger is None:
+                    cached_trigger = {}
+                    cached_trigger.update({"price_usdt": trigger_price})
+                else:
+                    if cached_trigger["price_usdt"] != trigger_price:
+                        cached_trigger["price_usdt"] = trigger_price
                 await cache.add(name=name, obj=cached_trigger)
                 LOGGER.debug(f"[TASK] Price updated for {trigger.from_symbol}: {trigger_price}")
             await asyncio.sleep(update_period_sec)
@@ -52,11 +56,13 @@ async def process_message(cache: Cache, message: str | bytes, bot: TGBot) -> Non
         await process_data(cache=cache, data=parsed_message.data, bot=bot)
 
 
-async def check_if_triggering(cache: Cache, data: KucoinWSMessageData) -> tuple[bool, dict]:
+async def check_if_triggering(cache: Cache, data: KucoinWSMessageData) -> tuple[bool, dict | None]:
     # TODO: add WS Server
 
     # 1. get cached trigger
-    cached_trigger = await cache.get(data.symbol)
+    cached_trigger = await cache.get(name=data.symbol)
+    if cached_trigger is None:
+        return False, None
 
     min_value_usdt = cached_trigger.get("min_value_usdt")
     max_value_usdt = cached_trigger.get("max_value_usdt")
@@ -100,7 +106,6 @@ async def process_data(cache: Cache, data: KucoinWSMessageData, bot: TGBot) -> N
     # 3. get count of cached events
     transactions_count = await cache.get_count_for_period(name=cached_events_table, period_seconds=period_seconds)
     if transactions_count == transactions_max_count:
-
         # 4. send telegram notification
         text = (
             f"<b>❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️ACHTUNG❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️❗️️️️️️️️️️️️️️️️️️️️️️</b>\n"  # noqa

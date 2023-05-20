@@ -60,7 +60,7 @@ class AddTriggerRequestSchema(BaseModel):
     period_seconds: TriggerPeriods = TriggerPeriods.SET_3_MINUTES
 
 
-class GetSingleTriggerSchema(TimestampMixin):
+class SingleTriggerSchema(TimestampMixin):
     from_symbol: Symbols
     to_symbol: Symbols
 
@@ -71,11 +71,13 @@ class GetSingleTriggerSchema(TimestampMixin):
     period_seconds: TriggerPeriods
     started_at: datetime
 
-    transactions_count: int | None
-    price_usdt: float | None
-
     class Config:
         orm_mode = True
+
+
+class GetSingleTriggerSchema(SingleTriggerSchema):
+    transactions_count: int | None
+    price_usdt: float | None
 
 
 class TriggerExistsResponseSchema(BaseModel):

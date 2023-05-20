@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import orjson
 from loguru import logger as LOGGER
-from redis.asyncio import Redis, from_url, client
+from redis.asyncio import Redis, client, from_url
 from redis.exceptions import ConnectionError
 
 
@@ -59,8 +59,10 @@ class Cache:
         await self.redis.set(name=name, value=json_obj)
         return True
 
-    async def get(self, name: str) -> dict:
+    async def get(self, name: str) -> dict | None:
         json_obj = await self.redis.get(name=name)
+        if json_obj is None:
+            return None
         return orjson.loads(json_obj)
 
     async def delete(self, name: str) -> bool:
