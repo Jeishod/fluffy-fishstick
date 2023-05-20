@@ -13,6 +13,7 @@ from app.configs import Settings
 from app.db.crud_triggers import KucoinTriggersManager
 from app.db.session import Database
 from app.routers.account import accounts_router
+from app.routers.dashboard import dashboard_router
 from app.routers.detector import detector_router
 from app.routers.market import market_router
 from app.routers.system import system_router
@@ -85,11 +86,11 @@ class Application(FastAPI):
         self.db_triggers = KucoinTriggersManager(db=self.db)
 
     async def ping_cache(self) -> None:
-        response = await self.cache.ping()
-        if not response:
+        is_connected, connection_id = await self.cache.ping()
+        if not is_connected:
             self.cache = None
             return
-        self.connection_id = response
+        self.connection_id = connection_id
 
     async def ping_bot(self) -> None:
         if not self.config.TELEGRAM_BOT_ENABLED:
@@ -122,6 +123,7 @@ class Application(FastAPI):
         await self.ws_client.stop()
 
     def mount_routers(self) -> None:
+        self.include_router(router=dashboard_router, prefix="/api/v1", tags=["Dashboard"])
         self.include_router(router=detector_router, prefix="/api/v1", tags=["Detector"])
         self.include_router(router=market_router, prefix="/api/v1", tags=["Market"])
         self.include_router(router=accounts_router, prefix="/api/v1", tags=["Accounts"])

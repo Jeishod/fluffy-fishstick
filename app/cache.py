@@ -18,7 +18,7 @@ class Cache:
         self.notifications_channel = "notifications"
         self.psub = self.redis.pubsub()
 
-    async def ping(self) -> str | None:
+    async def ping(self) -> tuple[bool, str | None]:
         try:
             LOGGER.debug("[REDIS] Ping...")
             await self.redis.ping()
@@ -28,11 +28,11 @@ class Cache:
             connection_id = await self.get_connection_id()
             if not connection_id:
                 await self.set_connection_id(connection_id=gen_request_id())
-            return connection_id
+            return True, connection_id
 
         except ConnectionError:
             LOGGER.warning("[REDIS] Ping... Failed!")
-            return None
+            return False, None
 
     async def get_connection_id(self) -> str | None:
         connection_id = await self.redis.get(name="CONNECTION_ID")
