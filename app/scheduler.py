@@ -1,5 +1,5 @@
-from rocketry import Rocketry
 from loguru import logger as LOGGER
+from rocketry import Rocketry
 
 from app.cache import Cache
 
@@ -13,14 +13,14 @@ class Scheduler:
         self.cache = cache
 
     async def start(self):
-        LOGGER.debug(f"[SCHEDULER] Starting...")
+        LOGGER.debug("[SCHEDULER] Starting...")
         try:
             await self.scheduler.serve()
         except (KeyboardInterrupt, Exception):
             await self.stop()
 
     async def stop(self):
-        LOGGER.warning(f"[SCHEDULER] Stopping...")
+        LOGGER.warning("[SCHEDULER] Stopping...")
         if self.scheduler.session is not None:
             await self.scheduler.session.shutdown()
 
