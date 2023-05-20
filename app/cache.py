@@ -5,6 +5,8 @@ from loguru import logger as LOGGER
 from redis.asyncio import Redis, client, from_url
 from redis.exceptions import ConnectionError
 
+from app.utils.helpers import gen_request_id
+
 
 class Cache:
     redis: Redis
@@ -16,20 +18,31 @@ class Cache:
         self.notifications_channel = "notifications"
         self.psub = self.redis.pubsub()
 
-    async def ping(self) -> bool:
+    async def ping(self) -> str | None:
         try:
             LOGGER.debug("[REDIS] Ping...")
             await self.redis.ping()
             LOGGER.debug("[REDIS] Ping... Success!")
 
-            await self.redis.set(name="SERVICE_STARTED", value=datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S"))
-            from_redis = await self.redis.get(name="SERVICE_STARTED")
-            LOGGER.debug(f"[REDIS] CLIENT START TIME: {from_redis.decode()}")
-            return True
+            # RESET CONNECTION ID
+            connection_id = await self.get_connection_id()
+            if not connection_id:
+                await self.set_connection_id(connection_id=gen_request_id())
+            return connection_id
 
         except ConnectionError:
             LOGGER.warning("[REDIS] Ping... Failed!")
-            return False
+            return None
+
+    async def get_connection_id(self) -> str:
+        connection_id = await self.redis.get(name="CONNECTION_ID")
+        decoded_connection_id = connection_id.decode()
+        LOGGER.debug(f"[REDIS] GOT CONNECTION ID: {decoded_connection_id}")
+        return decoded_connection_id
+
+    async def set_connection_id(self, connection_id: str) -> None:
+        await self.redis.set(name="CONNECTION_ID", value=connection_id)
+        LOGGER.debug(f"[REDIS] SET CONNECTION ID: {connection_id}")
 
     async def add_for_now(self, name: str) -> int:
         now = datetime.now()
@@ -68,6 +81,21 @@ class Cache:
     async def delete(self, name: str) -> bool:
         await self.redis.delete(name)
         return True
+
+    async def get_collections_by_pattern(self, pattern: str):
+        keys = await self.redis.keys(pattern)
+        return keys
+
+    async def bulk_delete(self, names: list[str]) -> bool:
+        pipeline = self.redis.pipeline()
+        for name in names:
+            pipeline.delete(name)
+        await pipeline.execute()
+        return True
+
+    async def reset_cache(self):
+        cache_to_reset = await self.get_collections_by_pattern(pattern="EVENTS-*")
+        await self.bulk_delete(cache_to_reset)
 
     async def publish(self, data: str) -> None:
         await self.redis.publish(channel=self.notifications_channel, message=data)

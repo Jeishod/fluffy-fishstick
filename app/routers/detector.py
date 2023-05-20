@@ -88,6 +88,34 @@ async def add_trigger(
     return response
 
 
+@detector_router.patch("/triggers", status_code=status.HTTP_201_CREATED, response_model=SingleTriggerSchema)
+async def update_trigger(
+    data: AddTriggerRequestSchema,
+    db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
+    ws_client: WSClient = Depends(get_ws_client),
+    api_client: APIClient = Depends(get_api_client),
+    cache: Cache = Depends(get_cache),
+):
+    """
+    Request via this endpoint to update trigger params for given symbols pair.
+    """
+    await triggers_manager.remove_trigger(
+        from_symbol=data.from_symbol,
+        to_symbol=data.to_symbol,
+        db_triggers=db_triggers,
+        ws_client=ws_client,
+        cache=cache,
+    )
+    response = await triggers_manager.add_trigger(
+        data=data,
+        db_triggers=db_triggers,
+        ws_client=ws_client,
+        api_client=api_client,
+        cache=cache,
+    )
+    return response
+
+
 @detector_router.delete("/triggers", status_code=status.HTTP_200_OK, response_model=SingleTriggerSchema)
 async def remove_trigger(
     from_symbol: Symbols = Symbols.PEPE,

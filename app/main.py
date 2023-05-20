@@ -30,6 +30,7 @@ class Application(FastAPI):
     cache: Cache | None
     db: Database | None
     db_triggers: KucoinTriggersManager | None
+    connection_id: str | None
 
     def __init__(self, settings: Settings):
         CustomLogger.make_logger(level=LogLevel.DEBUG)
@@ -46,7 +47,7 @@ class Application(FastAPI):
         self.cache = Cache(url=self.config.REDIS_URL, decode_responses=False)
         self.bot = TGBot(token=self.config.TELEGRAM_BOT_TOKEN, admin_chat_id=self.config.TELEGRAM_ADMIN_CHAT_ID)
         self.scheduler = Scheduler(cache=self.cache)
-
+        self.connection_id = None
         self.db_triggers = None
 
         super().__init__(
@@ -84,9 +85,11 @@ class Application(FastAPI):
         self.db_triggers = KucoinTriggersManager(db=self.db)
 
     async def ping_cache(self) -> None:
-        if not await self.cache.ping():
+        response = await self.cache.ping()
+        if not response:
             self.cache = None
             return
+        self.connection_id = response
 
     async def ping_bot(self) -> None:
         if not self.config.TELEGRAM_BOT_ENABLED:
@@ -97,14 +100,14 @@ class Application(FastAPI):
         LOGGER.debug("[BOT] Ping... Success!")
 
     async def start_ws(self) -> None:
-        await self.ws_client.start()
+        await self.ws_client.start(self.connection_id)
 
     async def start_scheduler(self) -> None:
-        # TODO: clear cache every 1 hour
         asyncio.create_task(self.scheduler.start())
+        await self.scheduler.add_tasks()
 
     async def process_ws_messages(self) -> None:
-        # TODO: add price listener for triggers, run this every 3 minutes
+        # add price listener for triggers, run this every 3 minutes
         asyncio.create_task(update_prices(api_client=self.api_client, cache=self.cache, db_triggers=self.db_triggers))
 
         # TODO: restart subscriptions for triggers in database
@@ -112,7 +115,7 @@ class Application(FastAPI):
         # 2. add triggers to cache if cache is empty
         # 3. add subscriptions for each trigger
 
-        # TODO: start listening and process messages
+        # start listening and process messages
         asyncio.create_task(listen_websocket(ws_client=self.ws_client, cache=self.cache, bot=self.bot))
 
     async def close_ws(self) -> None:

@@ -28,15 +28,16 @@ class WSClient:
         response_json = response.json()
         self.token = response_json["data"]["token"]
 
-    def set_ws_uri(self) -> None:
+    def set_ws_uri(self, connection_id: str) -> None:
         if not self.token:
             self.set_ws_token()
-        connection_id = gen_request_id()
         self.uri = f"{self.ws_api_url}?token={self.token}&[connectId={connection_id}]"
 
-    async def connect(self) -> None:
+    async def connect(self, connection_id: str | None = None) -> None:
+        if not connection_id:
+            connection_id = gen_request_id()
         if not self.uri:
-            self.set_ws_uri()
+            self.set_ws_uri(connection_id=connection_id)
         self.websocket = await websockets.connect(uri=self.uri)
 
     @staticmethod
@@ -75,9 +76,9 @@ class WSClient:
         await self.websocket.send(message=subscription_message)
         LOGGER.debug(f"[WS CLIENT] SUBSCRIPTION CANCELLED FOR PAIR: {from_symbol}-{to_symbol}")
 
-    async def start(self):
+    async def start(self, connection_id: str):
         if not self.websocket:
-            await self.connect()
+            await self.connect(connection_id=connection_id)
 
     async def stop(self):
         if not self.websocket:

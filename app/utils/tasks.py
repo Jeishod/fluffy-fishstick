@@ -48,6 +48,8 @@ async def process_message(cache: Cache, message: str | bytes, bot: TGBot) -> Non
     parsed_message = KucoinWSMessage.parse_raw(message)
     if parsed_message.type == "welcome":
         LOGGER.debug(f"[WS CLIENT] Websocket accepted: {message}")
+        connection_id = parsed_message.id
+        await cache.set_connection_id(connection_id=connection_id)
         return
     if parsed_message.type == "ack":
         LOGGER.debug(f"[WS CLIENT] Server confirmed {message}")
