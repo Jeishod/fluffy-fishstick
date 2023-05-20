@@ -16,6 +16,7 @@ from app.routers.account import accounts_router
 from app.routers.detector import detector_router
 from app.routers.market import market_router
 from app.routers.system import system_router
+from app.scheduler import Scheduler
 from app.utils.logger import CustomLogger, LogLevel
 from app.utils.tasks import listen_websocket, update_prices
 
@@ -24,6 +25,7 @@ class Application(FastAPI):
     config: Settings
     api_client: APIClient
     ws_client: WSClient
+    scheduler: Scheduler
     bot: TGBot | None
     cache: Cache | None
     db: Database | None
@@ -43,6 +45,7 @@ class Application(FastAPI):
         self.db = Database(url=self.config.POSTGRES_URL, echo=self.config.APP_DEBUG)
         self.cache = Cache(url=self.config.REDIS_URL, decode_responses=False)
         self.bot = TGBot(token=self.config.TELEGRAM_BOT_TOKEN, admin_chat_id=self.config.TELEGRAM_ADMIN_CHAT_ID)
+        self.scheduler = Scheduler(cache=self.cache)
 
         self.db_triggers = None
 
@@ -56,6 +59,7 @@ class Application(FastAPI):
         self.add_event_handler("startup", self.ping_cache)
         self.add_event_handler("startup", self.ping_bot)
         self.add_event_handler("startup", self.start_ws)
+        self.add_event_handler("startup", self.start_scheduler)
         self.add_event_handler("startup", self.process_ws_messages)
 
         self.add_event_handler("shutdown", self.close_ws)
@@ -95,7 +99,11 @@ class Application(FastAPI):
     async def start_ws(self) -> None:
         await self.ws_client.start()
 
-    async def process_ws_messages(self):
+    async def start_scheduler(self) -> None:
+        # TODO: clear cache every 1 hour
+        asyncio.create_task(self.scheduler.start())
+
+    async def process_ws_messages(self) -> None:
         # TODO: add price listener for triggers, run this every 3 minutes
         asyncio.create_task(update_prices(api_client=self.api_client, cache=self.cache, db_triggers=self.db_triggers))
 
@@ -107,7 +115,7 @@ class Application(FastAPI):
         # TODO: start listening and process messages
         asyncio.create_task(listen_websocket(ws_client=self.ws_client, cache=self.cache, bot=self.bot))
 
-    async def close_ws(self):
+    async def close_ws(self) -> None:
         await self.ws_client.stop()
 
     def mount_routers(self) -> None:

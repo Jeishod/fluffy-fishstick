@@ -66,6 +66,7 @@ class CustomLogger:
             "aiogram.event",
             "fastapi",
             "httpx",
+            "rocketry",
             "sqlalchemy.engine.Engine",
             "uvicorn",
             "uvicorn.access",
