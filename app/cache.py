@@ -34,8 +34,10 @@ class Cache:
             LOGGER.warning("[REDIS] Ping... Failed!")
             return None
 
-    async def get_connection_id(self) -> str:
+    async def get_connection_id(self) -> str | None:
         connection_id = await self.redis.get(name="CONNECTION_ID")
+        if not connection_id:
+            return None
         decoded_connection_id = connection_id.decode()
         LOGGER.debug(f"[REDIS] GOT CONNECTION ID: {decoded_connection_id}")
         return decoded_connection_id
