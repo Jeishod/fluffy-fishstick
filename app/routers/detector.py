@@ -42,8 +42,8 @@ async def check_trigger_exists(
     """
     response = await triggers_manager.already_exists(
         db_triggers=db_triggers,
-        from_symbol=from_symbol,
-        to_symbol=to_symbol,
+        from_symbol=from_symbol.upper(),
+        to_symbol=to_symbol.upper(),
     )
     return response
 
@@ -59,8 +59,8 @@ async def get_trigger(
     Request via this endpoint to get single trigger info.
     """
     response = await triggers_manager.get_trigger(
-        from_symbol=from_symbol,
-        to_symbol=to_symbol,
+        from_symbol=from_symbol.upper(),
+        to_symbol=to_symbol.upper(),
         db_triggers=db_triggers,
         cache=cache,
     )
@@ -128,8 +128,8 @@ async def remove_trigger(
     Request via this endpoint to remove trigger for given symbols pair.
     """
     response = await triggers_manager.remove_trigger(
-        from_symbol=from_symbol,
-        to_symbol=to_symbol,
+        from_symbol=from_symbol.upper(),
+        to_symbol=to_symbol.upper(),
         db_triggers=db_triggers,
         ws_client=ws_client,
         cache=cache,

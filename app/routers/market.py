@@ -54,7 +54,7 @@ async def get_stats(
     """
     Request via this endpoint to get the statistics of the specified ticker in the last 24 hours.
     """
-    response = await client.get_stats(from_symbol=from_symbol, to_symbol=to_symbol)
+    response = await client.get_stats(from_symbol=from_symbol.upper(), to_symbol=to_symbol.upper())
     return response.json()
 
 
@@ -84,7 +84,7 @@ async def get_ticker(
     The returned value includes the best bid price and size,
     the best ask price and size as well as the last traded price and the last traded size.
     """
-    response = await client.get_ticker(from_symbol=from_symbol, to_symbol=to_symbol)
+    response = await client.get_ticker(from_symbol=from_symbol.upper(), to_symbol=to_symbol.upper())
     return response.json()
 
 
@@ -101,7 +101,7 @@ async def get_order_book_part(
     Level-2 order book includes all bids and asks (aggregated by price).
     This level returns only one size for each active price (as if there was only a single order for that price).
     """
-    response = await client.get_order_book(from_symbol=from_symbol, to_symbol=to_symbol, count=count)
+    response = await client.get_order_book(from_symbol=from_symbol.upper(), to_symbol=to_symbol.upper(), count=count)
     return response.json()
 
 
@@ -122,7 +122,7 @@ async def get_order_book_full(
     It is generally used by professional traders because it uses more server resources and traffic,
     and we have strict access frequency control.
     """
-    response = await client.get_order_book_full(from_symbol=from_symbol, to_symbol=to_symbol)
+    response = await client.get_order_book_full(from_symbol=from_symbol.upper(), to_symbol=to_symbol.upper())
     return response.json()
 
 
@@ -135,7 +135,7 @@ async def get_trade_histories(
     """
     Request via this endpoint to get the trade history of the specified symbol.
     """
-    response = await client.get_histories(from_symbol=from_symbol, to_symbol=to_symbol)
+    response = await client.get_histories(from_symbol=from_symbol.upper(), to_symbol=to_symbol.upper())
     return response
 
 
@@ -153,8 +153,8 @@ async def get_klines(
     Data are returned in grouped buckets based on requested type.
     """
     response = await client.get_klines(
-        from_symbol=from_symbol,
-        to_symbol=to_symbol,
+        from_symbol=from_symbol.upper(),
+        to_symbol=to_symbol.upper(),
         candle_type=candle_type,
         from_time=from_time,
         to_time=to_time,
