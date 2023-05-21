@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, status
 
-from app.clients.kucoin_api import APIClient
+from app.modules.clients.kucoin_api import APIClient
 from app.utils.dependencies import get_api_client
 
 

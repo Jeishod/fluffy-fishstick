@@ -1,10 +1,10 @@
 from fastapi import APIRouter, Depends, status
 
-from app.cache import Cache
-from app.clients.kucoin_api import APIClient
-from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
 from app.managers import triggers_manager
+from app.modules.cache import Cache
+from app.modules.clients.kucoin_api import APIClient
+from app.modules.clients.kucoin_ws import WSClient
 from app.utils.dependencies import get_api_client, get_cache, get_db_triggers, get_ws_client
 from app.utils.enums import ExampleSymbols
 from app.utils.schemas import (

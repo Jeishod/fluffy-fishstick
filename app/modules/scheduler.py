@@ -2,7 +2,7 @@ from loguru import logger as LOGGER
 from rocketry import Rocketry
 from rocketry.conditions.api import hourly
 
-from app.cache import Cache
+from app.modules.cache import Cache
 
 
 class Scheduler:

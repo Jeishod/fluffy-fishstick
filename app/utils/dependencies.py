@@ -1,9 +1,9 @@
 from fastapi import Request
 
-from app.cache import Cache
-from app.clients.kucoin_api import APIClient
-from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
+from app.modules.cache import Cache
+from app.modules.clients.kucoin_api import APIClient
+from app.modules.clients.kucoin_ws import WSClient
 
 
 def get_api_client(request: Request) -> APIClient:

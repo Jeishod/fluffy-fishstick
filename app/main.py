@@ -5,19 +5,19 @@ from loguru import logger as LOGGER
 from starlette.middleware.cors import CORSMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from app.bot import TGBot
-from app.cache import Cache
-from app.clients.kucoin_api import APIClient
-from app.clients.kucoin_ws import WSClient
 from app.configs import Settings
 from app.db.crud_triggers import KucoinTriggersManager
 from app.db.session import Database
+from app.modules.bot import TGBot
+from app.modules.cache import Cache
+from app.modules.clients.kucoin_api import APIClient
+from app.modules.clients.kucoin_ws import WSClient
+from app.modules.scheduler import Scheduler
 from app.routers.account import accounts_router
 from app.routers.dashboard import dashboard_router
 from app.routers.detector import detector_router
 from app.routers.market import market_router
 from app.routers.system import system_router
-from app.scheduler import Scheduler
 from app.utils.logger import CustomLogger, LogLevel
 from app.utils.tasks import listen_websocket, update_prices
 
