@@ -9,7 +9,7 @@ class RequestMethod(StrEnum):
     DELETE = "DELETE"
 
 
-class Symbols(StrEnum):
+class ExampleSymbols(StrEnum):
     PEPE = "PEPE"
     BTC = "BTC"
     USDT = "USDT"

@@ -6,14 +6,14 @@ from sqlalchemy import exists, select
 
 from app.db.models import KucoinTrigger
 from app.db.session import Database
-from app.utils.enums import Symbols, TriggerPeriods
+from app.utils.enums import TriggerPeriods
 
 
 @dataclass
 class KucoinTriggersManager:
     db: Database
 
-    async def already_exists(self, from_symbol: Symbols, to_symbol: Symbols) -> bool:
+    async def already_exists(self, from_symbol: str, to_symbol: str) -> bool:
         query = select(exists().where(KucoinTrigger.from_symbol == from_symbol, KucoinTrigger.to_symbol == to_symbol))
         async with self.db.session() as session:
             result = await session.execute(query)
@@ -21,8 +21,8 @@ class KucoinTriggersManager:
 
     async def create(
         self,
-        from_symbol: Symbols,
-        to_symbol: Symbols,
+        from_symbol: str,
+        to_symbol: str,
         min_value_usdt: float,
         max_value_usdt: float,
         transactions_max_count: int,
@@ -46,7 +46,7 @@ class KucoinTriggersManager:
             await session.refresh(new_trigger)
         return new_trigger
 
-    async def get(self, from_symbol: Symbols, to_symbol: Symbols) -> KucoinTrigger | None:
+    async def get(self, from_symbol: str, to_symbol: str) -> KucoinTrigger | None:
         query = select(KucoinTrigger).filter_by(from_symbol=from_symbol, to_symbol=to_symbol)
         async with self.db.session() as session:
             result = await session.execute(query)
@@ -58,7 +58,7 @@ class KucoinTriggersManager:
             result = await session.execute(query)
             return result.scalars().all()
 
-    async def remove(self, from_symbol: Symbols, to_symbol: Symbols) -> KucoinTrigger | None:
+    async def remove(self, from_symbol: str, to_symbol: str) -> KucoinTrigger | None:
         db_trigger = await self.get(from_symbol=from_symbol, to_symbol=to_symbol)
         if db_trigger:
             async with self.db.session() as session:

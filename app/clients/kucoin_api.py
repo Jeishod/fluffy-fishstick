@@ -7,10 +7,10 @@ from loguru import logger as LOGGER
 
 from app.utils.enums import (
     CandleType,
+    ExampleSymbols,
     OrdersCount,
     OrderType,
     RequestMethod,
-    Symbols,
     TradeSide,
     TradeStatus,
     TradeType,
@@ -95,7 +95,7 @@ class APIClient:
     async def get_orders(
         self,
         status: TradeStatus | None = None,
-        symbol: Symbols | None = None,
+        symbol: str | None = None,
         side: TradeSide | None = None,
         type: OrderType | None = None,
         trade_type: TradeType | None = TradeType.MARGIN_ISOLATED_TRADE,
@@ -148,7 +148,7 @@ class APIClient:
         )
         return response
 
-    async def get_stats(self, from_symbol: Symbols, to_symbol: Symbols):
+    async def get_stats(self, from_symbol: str, to_symbol: str):
         request_id = gen_request_id()
         endpoint = "/api/v1/market/stats"
         params = {
@@ -174,7 +174,7 @@ class APIClient:
         )
         return response
 
-    async def get_ticker(self, from_symbol: Symbols, to_symbol: Symbols):
+    async def get_ticker(self, from_symbol: str, to_symbol: str):
         request_id = gen_request_id()
         endpoint = "/api/v1/market/orderbook/level1"
         params = {
@@ -189,13 +189,13 @@ class APIClient:
         )
         return response
 
-    async def get_price_in_usdt(self, from_symbol: Symbols) -> str:
-        ticker = await self.get_ticker(from_symbol=from_symbol, to_symbol=Symbols.USDT)
+    async def get_price_in_usdt(self, from_symbol: str) -> str:
+        ticker = await self.get_ticker(from_symbol=from_symbol, to_symbol=ExampleSymbols.USDT)
         ticker_json = ticker.json()
         price = ticker_json["data"]["price"]
         return price
 
-    async def get_order_book(self, from_symbol: Symbols, to_symbol: Symbols, count: OrdersCount):
+    async def get_order_book(self, from_symbol: str, to_symbol: str, count: OrdersCount):
         request_id = gen_request_id()
         endpoint = f"/api/v1/market/orderbook/level2_{count}"
         params = {
@@ -210,7 +210,7 @@ class APIClient:
         )
         return response
 
-    async def get_order_book_full(self, from_symbol: Symbols, to_symbol: Symbols):
+    async def get_order_book_full(self, from_symbol: str, to_symbol: str):
         request_id = gen_request_id()
         endpoint = "/api/v3/market/orderbook/level2"
         params = {
@@ -225,7 +225,7 @@ class APIClient:
         )
         return response
 
-    async def get_histories(self, from_symbol: Symbols, to_symbol: Symbols):
+    async def get_histories(self, from_symbol: str, to_symbol: str):
         request_id = gen_request_id()
         endpoint = "/api/v1/market/histories"
         params = {
@@ -249,8 +249,8 @@ class APIClient:
 
     async def get_klines(
         self,
-        from_symbol: Symbols,
-        to_symbol: Symbols,
+        from_symbol: str,
+        to_symbol: str,
         candle_type: CandleType,
         from_time: datetime.datetime | None = None,
         to_time: datetime.datetime | None = None,

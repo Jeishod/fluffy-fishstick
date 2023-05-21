@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, status
 
 from app.clients.kucoin_api import APIClient
 from app.utils.dependencies import get_api_client
-from app.utils.enums import CandleType, OrdersCount, Symbols
+from app.utils.enums import CandleType, ExampleSymbols, OrdersCount
 
 
 market_router = APIRouter(prefix="/market")
@@ -47,8 +47,8 @@ async def get_currencies(
 
 @market_router.get("/stats", status_code=status.HTTP_200_OK)
 async def get_stats(
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     client: APIClient = Depends(get_api_client),
 ):
     """
@@ -74,8 +74,8 @@ async def get_all_tickers(
 
 @market_router.get("/ticker", status_code=status.HTTP_200_OK)
 async def get_ticker(
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     client: APIClient = Depends(get_api_client),
 ):
     """
@@ -90,8 +90,8 @@ async def get_ticker(
 
 @market_router.get("/order_book/part", status_code=status.HTTP_200_OK)
 async def get_order_book_part(
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     count: OrdersCount = OrdersCount.GET_20,
     client: APIClient = Depends(get_api_client),
 ):
@@ -107,8 +107,8 @@ async def get_order_book_part(
 
 @market_router.get("/order_book/full", status_code=status.HTTP_200_OK, deprecated=True)
 async def get_order_book_full(
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     client: APIClient = Depends(get_api_client),
 ):
     """
@@ -128,8 +128,8 @@ async def get_order_book_full(
 
 @market_router.get("/histories", status_code=status.HTTP_200_OK)
 async def get_trade_histories(
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     client: APIClient = Depends(get_api_client),
 ):
     """
@@ -143,8 +143,8 @@ async def get_trade_histories(
 async def get_klines(
     from_time: datetime = (datetime.utcnow() - timedelta(hours=2)),
     to_time: datetime = datetime.utcnow(),
-    from_symbol: Symbols = Symbols.GENS,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.GENS,
+    to_symbol: str = ExampleSymbols.USDT,
     candle_type: CandleType = CandleType.GET_3_MIN,
     client: APIClient = Depends(get_api_client),
 ):

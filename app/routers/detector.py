@@ -6,7 +6,7 @@ from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
 from app.managers import triggers_manager
 from app.utils.dependencies import get_api_client, get_cache, get_db_triggers, get_ws_client
-from app.utils.enums import Symbols
+from app.utils.enums import ExampleSymbols
 from app.utils.schemas import (
     AddTriggerRequestSchema,
     GetSingleTriggerSchema,
@@ -33,8 +33,8 @@ async def get_all_triggers(
 
 @detector_router.get("/triggers/exists", status_code=status.HTTP_200_OK, response_model=TriggerExistsResponseSchema)
 async def check_trigger_exists(
-    from_symbol: Symbols = Symbols.PEPE,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.PEPE,
+    to_symbol: str = ExampleSymbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
 ):
     """
@@ -50,8 +50,8 @@ async def check_trigger_exists(
 
 @detector_router.get("/triggers", status_code=status.HTTP_200_OK, response_model=GetSingleTriggerSchema)
 async def get_trigger(
-    from_symbol: Symbols = Symbols.PEPE,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.PEPE,
+    to_symbol: str = ExampleSymbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
     cache: Cache = Depends(get_cache),
 ):
@@ -118,8 +118,8 @@ async def update_trigger(
 
 @detector_router.delete("/triggers", status_code=status.HTTP_200_OK, response_model=SingleTriggerSchema)
 async def remove_trigger(
-    from_symbol: Symbols = Symbols.PEPE,
-    to_symbol: Symbols = Symbols.USDT,
+    from_symbol: str = ExampleSymbols.PEPE,
+    to_symbol: str = ExampleSymbols.USDT,
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
     ws_client: WSClient = Depends(get_ws_client),
     cache: Cache = Depends(get_cache),

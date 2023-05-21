@@ -4,7 +4,7 @@ from datetime import datetime
 import orjson
 from pydantic import BaseModel
 
-from app.utils.enums import Symbols, TradeSide, TradeStatus, TradeType, TriggerPeriods
+from app.utils.enums import ExampleSymbols, TradeSide, TradeStatus, TradeType, TriggerPeriods
 
 
 class TimestampMixin(BaseModel):
@@ -50,8 +50,8 @@ class KucoinWSMessage(TimestampMixin):
 
 
 class AddTriggerRequestSchema(BaseModel):
-    from_symbol: Symbols = Symbols.PEPE
-    to_symbol: Symbols = Symbols.USDT
+    from_symbol: str = ExampleSymbols.PEPE
+    to_symbol: str = ExampleSymbols.USDT
 
     min_value_usdt: float = "0.0"
     max_value_usdt: float = "100.0"
@@ -61,8 +61,8 @@ class AddTriggerRequestSchema(BaseModel):
 
 
 class SingleTriggerSchema(TimestampMixin):
-    from_symbol: Symbols
-    to_symbol: Symbols
+    from_symbol: str
+    to_symbol: str
 
     min_value_usdt: float
     max_value_usdt: float

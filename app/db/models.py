@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Float, Integer, MetaData, String
 
 from app.db.session import Base
-from app.utils.enums import Symbols, TriggerPeriods
+from app.utils.enums import TriggerPeriods
 
 
 metadata = MetaData()
@@ -15,8 +15,8 @@ class KucoinTrigger(Base):
 
     id: int = Column(Integer, primary_key=True)
 
-    from_symbol: Symbols = Column(String)
-    to_symbol: Symbols = Column(String)
+    from_symbol: str = Column(String)
+    to_symbol: str = Column(String)
 
     min_value_usdt: float = Column(Float)
     max_value_usdt: float = Column(Float)

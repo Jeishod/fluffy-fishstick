@@ -5,7 +5,7 @@ import websockets
 from loguru import logger as LOGGER
 from websockets import WebSocketClientProtocol
 
-from app.utils.enums import Symbols
+from app.utils.enums import ExampleSymbols
 from app.utils.helpers import gen_request_id
 
 
@@ -41,7 +41,7 @@ class WSClient:
         self.websocket = await websockets.connect(uri=self.uri)
 
     @staticmethod
-    def get_subscription_message(from_symbol: Symbols, to_symbol: Symbols, subscription: bool = True) -> str:
+    def get_subscription_message(from_symbol: str, to_symbol: str, subscription: bool = True) -> str:
         connection_id = gen_request_id()
         request_type = "subscribe" if subscription else "unsubscribe"
         subscription_message = {
@@ -53,7 +53,7 @@ class WSClient:
         }
         return json.dumps(obj=subscription_message)
 
-    async def subscribe(self, from_symbol: Symbols = Symbols.GENS, to_symbol: Symbols = Symbols.USDT) -> None:
+    async def subscribe(self, from_symbol: str = ExampleSymbols.GENS, to_symbol: str = ExampleSymbols.USDT) -> None:
         if not self.websocket:
             await self.connect()
 
@@ -64,7 +64,7 @@ class WSClient:
         await self.websocket.send(message=subscription_message)
         LOGGER.debug(f"[WS CLIENT] SUBSCRIPTION COMPLETED FOR PAIR: {from_symbol}-{to_symbol}")
 
-    async def unsubscribe(self, from_symbol: Symbols = Symbols.GENS, to_symbol: Symbols = Symbols.USDT) -> None:
+    async def unsubscribe(self, from_symbol: str = ExampleSymbols.GENS, to_symbol: str = ExampleSymbols.USDT) -> None:
         if not self.websocket:
             await self.connect()
 

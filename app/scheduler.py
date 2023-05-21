@@ -10,10 +10,12 @@ class Scheduler:
     cache: Cache
 
     def __init__(self, cache: Cache):
-        self.scheduler = Rocketry(config={
-            "task_execution": "async",
-            "silence_task_logging": False,
-        })
+        self.scheduler = Rocketry(
+            config={
+                "task_execution": "async",
+                "silence_task_logging": False,
+            }
+        )
         self.cache = cache
 
     async def start(self):

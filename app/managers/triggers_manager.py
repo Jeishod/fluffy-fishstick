@@ -5,7 +5,6 @@ from app.cache import Cache
 from app.clients.kucoin_api import APIClient
 from app.clients.kucoin_ws import WSClient
 from app.db.crud_triggers import KucoinTriggersManager
-from app.utils.enums import Symbols
 from app.utils.schemas import AddTriggerRequestSchema, GetSingleTriggerSchema, TriggerExistsResponseSchema
 
 
@@ -15,15 +14,17 @@ async def get_all(db_triggers: KucoinTriggersManager) -> list[GetSingleTriggerSc
 
 
 async def already_exists(
-    from_symbol: Symbols, to_symbol: Symbols, db_triggers: KucoinTriggersManager
+    from_symbol: str,
+    to_symbol: str,
+    db_triggers: KucoinTriggersManager,
 ) -> TriggerExistsResponseSchema:
     exists = await db_triggers.already_exists(from_symbol=from_symbol, to_symbol=to_symbol)
     return {"exists": exists}
 
 
 async def get_trigger(
-    from_symbol: Symbols,
-    to_symbol: Symbols,
+    from_symbol: str,
+    to_symbol: str,
     db_triggers: KucoinTriggersManager,
     cache: Cache,
 ) -> GetSingleTriggerSchema:
@@ -79,8 +80,8 @@ async def add_trigger(
 
 
 async def remove_trigger(
-    from_symbol: Symbols,
-    to_symbol: Symbols,
+    from_symbol: str,
+    to_symbol: str,
     db_triggers: KucoinTriggersManager,
     ws_client: WSClient,
     cache: Cache,
@@ -105,7 +106,7 @@ async def reset_transactions_cache(
 ) -> None:
     cache_to_reset = await cache.get_collections_by_pattern(pattern="EVENTS-*")
     await cache.bulk_delete(names=cache_to_reset)
-    LOGGER.debug(f"[TASK] TRIGGERS TRANSACTIONS DELETED")
+    LOGGER.debug("[TASK] TRIGGERS TRANSACTIONS DELETED")
 
 
 async def remove_all_triggers(
