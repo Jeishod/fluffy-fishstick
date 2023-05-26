@@ -53,6 +53,7 @@ class CandleType(StrEnum):
 class TradeSide(StrEnum):
     BUY = "buy"
     SELL = "sell"
+    BOTH = "both"
 
 
 class OrdersCount(StrEnum):

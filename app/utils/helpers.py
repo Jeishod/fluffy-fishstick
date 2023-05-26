@@ -1,4 +1,5 @@
 import base64
+import decimal
 import hashlib
 import hmac
 import time
@@ -27,3 +28,8 @@ def get_sign_string(method: RequestMethod, endpoint: str, data_json: str = "") -
 def gen_request_id() -> str:
     request_id = str(uuid.uuid4())
     return request_id
+
+
+def default_decimal_serializer(obj):
+    if isinstance(obj, decimal.Decimal):
+        return str(obj)

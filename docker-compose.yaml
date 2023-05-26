@@ -47,6 +47,13 @@ x-redis-envs:
   REDIS_PORT: ${REDIS_PORT}
   REDIS_DB: ${REDIS_DB}
 
+x-rabbitmq-envs:
+  &rabbitmq-envs
+  RABBITMQ_HOST: ${RABBITMQ_HOST}
+  RABBITMQ_USER: ${RABBITMQ_USER}
+  RABBITMQ_PASSWORD: ${RABBITMQ_PASSWORD}
+  RABBITMQ_PORT: ${RABBITMQ_PORT}
+
 services:
   kucoin-api:
     container_name: kucoin-api
@@ -57,7 +64,7 @@ services:
     image: kucoin-api
     restart: always
     environment:
-      <<: [*kucoin-api-envs, *tg-bot-envs, *postgres-envs, *redis-envs]
+      <<: [*kucoin-api-envs, *tg-bot-envs, *postgres-envs, *redis-envs, *rabbitmq-envs]
     ports:
       - "${KUCOIN_EXPOSED_PORT:-8000}:8000"
     healthcheck:

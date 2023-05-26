@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import Column, DateTime, Float, Integer, MetaData, String
 
 from app.db.session import Base
-from app.utils.enums import TriggerPeriods
+from app.utils.enums import TradeSide, TriggerPeriods
 
 
 metadata = MetaData()
@@ -22,5 +22,6 @@ class KucoinTrigger(Base):
     max_value_usdt: float = Column(Float)
 
     transactions_max_count: int = Column(Integer)
+    side: TradeSide = Column(String)
     period_seconds: TriggerPeriods = Column(Integer)
     started_at: datetime = Column(DateTime(timezone=False), default=datetime.utcnow)

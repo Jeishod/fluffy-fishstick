@@ -18,15 +18,17 @@ from app.utils.schemas import (
 detector_router = APIRouter(prefix="/detector")
 
 
-@detector_router.get("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[SingleTriggerSchema])
+@detector_router.get("/triggers/all", status_code=status.HTTP_200_OK, response_model=list[GetSingleTriggerSchema])
 async def get_all_triggers(
     db_triggers: KucoinTriggersManager = Depends(get_db_triggers),
+    cache: Cache = Depends(get_cache),
 ):
     """
     Request via this endpoint to get list of active triggers.
     """
     response = await triggers_manager.get_all(
         db_triggers=db_triggers,
+        cache=cache,
     )
     return response
 

@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import orjson
 from loguru import logger as LOGGER
-from redis.asyncio import Redis, client, from_url
+from redis.asyncio import Redis, from_url
 from redis.exceptions import ConnectionError
 
 from app.utils.helpers import gen_request_id
@@ -11,12 +11,10 @@ from app.utils.helpers import gen_request_id
 class Cache:
     redis: Redis
     notifications_channel: str
-    psub: client.PubSub
 
     def __init__(self, url: str, decode_responses: bool = False):
         self.redis = from_url(url=url, decode_responses=decode_responses, encoding="utf-8", max_connections=10)
         self.notifications_channel = "notifications"
-        self.psub = self.redis.pubsub()
 
     async def ping(self) -> tuple[bool, str | None]:
         try:
@@ -46,10 +44,10 @@ class Cache:
         await self.redis.set(name="CONNECTION_ID", value=connection_id)
         LOGGER.debug(f"[REDIS] SET CONNECTION ID: {connection_id}")
 
-    async def add_for_now(self, name: str) -> int:
+    async def add_for_now(self, name: str, time: datetime) -> int:
         now = datetime.now()
         now_string = now.isoformat()
-        timestamp = now.timestamp()
+        timestamp = time.timestamp()
         result = await self.redis.zadd(name=name, mapping={now_string: timestamp}, nx=True)
         return result
 
@@ -57,6 +55,7 @@ class Cache:
         now = datetime.now()
         min_val = now - timedelta(seconds=period_seconds)
         count = await self.redis.zcount(name=name, min=min_val.timestamp(), max=now.timestamp())
+        LOGGER.debug(f"{name}: {count} messages for last {period_seconds} seconds.")
         return count
 
     async def get_count(self, name: str) -> int:
@@ -96,11 +95,5 @@ class Cache:
         return True
 
     async def reset_cache(self):
-        cache_to_reset = await self.get_collections_by_pattern(pattern="EVENTS-*")
-        await self.bulk_delete(cache_to_reset)
-
-    async def publish(self, data: str) -> None:
-        await self.redis.publish(channel=self.notifications_channel, message=data)
-
-    async def get_pubsub(self):
-        self.psub = self.redis.pubsub()
+        cache_events_to_reset = await self.get_collections_by_pattern(pattern="EVENTS-*")
+        await self.bulk_delete(cache_events_to_reset)

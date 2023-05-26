@@ -25,6 +25,17 @@ class OrdersRequestParams(BaseModel):
     endAt: int | None = None
 
 
+class ParsedWSMessage(TimestampMixin):
+    symbol: str  # "PEPE-USDT"
+    side: TradeSide  # "sell"
+    size: decimal.Decimal  # "53260869.5652"
+    time: datetime  # "1683997968318000000"
+
+    class Config:
+        json_loads = orjson.loads
+        json_dumps = orjson.dumps
+
+
 class KucoinWSMessageData(TimestampMixin):
     makerOrderId: str  # "645fc50f36bfb50001b8d937"
     price: decimal.Decimal  # "0.000001834"
@@ -57,7 +68,19 @@ class AddTriggerRequestSchema(BaseModel):
     max_value_usdt: float = "100.0"
 
     transactions_max_count: int = 10
+
+    side: TradeSide = TradeSide.BOTH
     period_seconds: TriggerPeriods = TriggerPeriods.SET_3_MINUTES
+
+
+class CachedTriggerSchema(TimestampMixin):
+    price_usdt: str
+    min_value_usdt: float
+    max_value_usdt: float
+    transactions_max_count: int
+    period_seconds: TriggerPeriods
+    side: TradeSide
+    is_notified: bool = False
 
 
 class SingleTriggerSchema(TimestampMixin):
@@ -68,6 +91,8 @@ class SingleTriggerSchema(TimestampMixin):
     max_value_usdt: float
 
     transactions_max_count: int
+
+    side: TradeSide | None
     period_seconds: TriggerPeriods
     started_at: datetime
 
@@ -78,6 +103,7 @@ class SingleTriggerSchema(TimestampMixin):
 class GetSingleTriggerSchema(SingleTriggerSchema):
     transactions_count: int | None
     price_usdt: float | None
+    current_count: int | None
 
 
 class TriggerExistsResponseSchema(BaseModel):

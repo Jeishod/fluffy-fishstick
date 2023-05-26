@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "kucoin"
+name = "kucoin-detector"
 version = "0.1.0"
 description = ""
 authors = ["jeishod <jeishod@gmail.com>"]
@@ -22,6 +22,9 @@ redis = "^4.5.5"
 itsdangerous = "^2.1.2"
 orjson = "^3.8.12"
 rocketry = "^2.5.1"
+aio-pika = "^9.0.7"
+uvloop = "^0.17.0"
+jinja2 = "^3.1.2"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.3.0"

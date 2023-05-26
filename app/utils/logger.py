@@ -64,6 +64,8 @@ class CustomLogger:
             "asyncio",
             "aiogram.dispatcher",
             "aiogram.event",
+            "aiormq",
+            "aio_pika",
             "fastapi",
             "httpx",
             "rocketry",

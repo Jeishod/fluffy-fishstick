@@ -6,7 +6,7 @@ from sqlalchemy import exists, select
 
 from app.db.models import KucoinTrigger
 from app.db.session import Database
-from app.utils.enums import TriggerPeriods
+from app.utils.enums import TradeSide, TriggerPeriods
 
 
 @dataclass
@@ -26,6 +26,7 @@ class KucoinTriggersManager:
         min_value_usdt: float,
         max_value_usdt: float,
         transactions_max_count: int,
+        side: TradeSide,
         period_seconds: TriggerPeriods,
     ) -> KucoinTrigger | None:
         if await self.already_exists(from_symbol=from_symbol, to_symbol=to_symbol):
@@ -37,6 +38,7 @@ class KucoinTriggersManager:
             min_value_usdt=min_value_usdt,
             max_value_usdt=max_value_usdt,
             transactions_max_count=transactions_max_count,
+            side=side,
             period_seconds=period_seconds,
             started_at=datetime.utcnow(),
         )
